@@ -13,6 +13,14 @@
       --navy: #1B2A3F;
       --indigo: #4B6BFB;
       --indigo-light: #EEF2FF;
+      --urgent: #DC2626;
+      --urgent-light: #FEF2F2;
+      --high: #D97706;
+      --high-light: #FFF7ED;
+      --normal: #4B6BFB;
+      --normal-light: #EEF2FF;
+      --low: #059669;
+      --low-light: #ECFDF5;
       --g100: #F7F8FB;
       --g200: #E8ECF2;
       --g400: #8A96A8;
@@ -156,22 +164,39 @@
     /* Event pill */
     .ev {
       position: absolute;
-      inset: 3px 2px 3px 0;
-      border-left: 3px solid var(--indigo);
+      left: 0;
+      right: 2px;
+      min-height: 26px;
+      border-left: 3px solid var(--normal);
       border-radius: 0 5px 5px 0;
-      background: var(--indigo-light);
+      background: var(--normal-light);
       padding: 3px 4px;
       overflow: hidden;
       display: flex; flex-direction: column; justify-content: center;
+      z-index: 5;
+      box-shadow: 0 5px 12px rgba(27, 42, 63, .08);
     }
-    .ev:active { background: #DDE6FF; }
+    .ev:active { filter: brightness(.98); }
+    .ev.p-urgent { border-left-color: var(--urgent); background: var(--urgent-light); }
+    .ev.p-high { border-left-color: var(--high); background: var(--high-light); }
+    .ev.p-normal { border-left-color: var(--normal); background: var(--normal-light); }
+    .ev.p-low { border-left-color: var(--low); background: var(--low-light); }
     .ev-title {
-      font-size: 9px; font-weight: 700; color: var(--indigo);
+      font-size: 9px; font-weight: 700; color: var(--normal);
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
       line-height: 1.3;
     }
+    .ev.p-urgent .ev-title { color: var(--urgent); }
+    .ev.p-high .ev-title { color: var(--high); }
+    .ev.p-normal .ev-title { color: var(--normal); }
+    .ev.p-low .ev-title { color: var(--low); }
+    .ev-time {
+      font-size: 7px; color: var(--g600);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      line-height: 1.2; margin-bottom: 1px;
+    }
     .ev-memo {
-      font-size: 8px; color: #7389D0;
+      font-size: 8px; color: var(--g600);
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
       margin-top: 1px;
     }
@@ -209,23 +234,67 @@
     }
 
     .s-day { font-size: 11px; font-weight: 700; color: var(--g400); letter-spacing: .08em; text-transform: uppercase; }
-    .s-time { font-size: 22px; font-weight: 700; margin: 3px 0 20px; }
+    .s-time { font-size: 21px; font-weight: 700; margin: 3px 0 16px; }
     .s-lbl {
       display: block; font-size: 11px; font-weight: 700;
       color: var(--g400); letter-spacing: .08em; text-transform: uppercase;
       margin-bottom: 6px;
     }
-    .s-inp, .s-txt {
+    .s-inp, .s-txt, .s-select {
       width: 100%; border: 1.5px solid var(--g200); border-radius: 10px;
       padding: 12px 14px; font-size: 15px; color: var(--navy);
       outline: none; font-family: inherit; margin-bottom: 16px;
       -webkit-appearance: none;
+      appearance: none;
+      background: var(--white);
     }
-    .s-inp:focus, .s-txt:focus {
+    .s-inp:focus, .s-txt:focus, .s-select:focus {
       border-color: var(--indigo);
       box-shadow: 0 0 0 3px rgba(75,107,251,.12);
     }
     .s-txt { resize: none; height: 88px; }
+    .s-time-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .prio-row {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 7px;
+      margin-bottom: 16px;
+    }
+    .prio-btn {
+      min-height: 42px;
+      border: 1.5px solid var(--g200);
+      border-radius: 10px;
+      background: var(--white);
+      color: var(--g600);
+      font-size: 12px;
+      font-weight: 700;
+      font-family: inherit;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      cursor: pointer;
+    }
+    .prio-btn::before {
+      content: "";
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--normal);
+      flex: 0 0 auto;
+    }
+    .prio-btn.p-urgent::before { background: var(--urgent); }
+    .prio-btn.p-high::before { background: var(--high); }
+    .prio-btn.p-normal::before { background: var(--normal); }
+    .prio-btn.p-low::before { background: var(--low); }
+    .prio-btn.on.p-urgent { border-color: var(--urgent); background: var(--urgent-light); color: var(--urgent); }
+    .prio-btn.on.p-high { border-color: var(--high); background: var(--high-light); color: var(--high); }
+    .prio-btn.on.p-normal { border-color: var(--normal); background: var(--normal-light); color: var(--normal); }
+    .prio-btn.on.p-low { border-color: var(--low); background: var(--low-light); color: var(--low); }
 
     .s-acts { display: flex; flex-direction: column; gap: 10px; }
     .s-save {
@@ -355,6 +424,18 @@
     <div class="sheet-handle"></div>
     <div class="s-day" id="sDay"></div>
     <div class="s-time" id="sTime"></div>
+    <div class="s-time-row">
+      <div>
+        <label class="s-lbl" for="sStart">開始</label>
+        <select class="s-select" id="sStart"></select>
+      </div>
+      <div>
+        <label class="s-lbl" for="sEnd">終了</label>
+        <select class="s-select" id="sEnd"></select>
+      </div>
+    </div>
+    <label class="s-lbl">優先度</label>
+    <div class="prio-row" id="sPriority"></div>
     <label class="s-lbl">タイトル</label>
     <input class="s-inp" id="sTitle" placeholder="例：会議、勉強、食事…" enterkeyhint="done"/>
     <label class="s-lbl">メモ・備考</label>
@@ -404,14 +485,34 @@
 
 <script>
 const HOURS = Array.from({length:17},(_,i)=>i+6);
+const DAY_START = 6 * 60;
+const DAY_END = 23 * 60;
+const SLOT_MIN = 15;
+const CELL_H = 52;
 const DJP   = ['月','火','水','木','金','土','日'];
 const STORE  = 'tblocker_v2';
 const BACKUP_KIND = 'weekly-time-blocker-mobile-backup';
+const PRIORITY_ORDER = ['urgent','high','normal','low'];
+const PRIORITIES = {
+  urgent: {label:'最優先', cls:'p-urgent'},
+  high: {label:'高', cls:'p-high'},
+  normal: {label:'通常', cls:'p-normal'},
+  low: {label:'低', cls:'p-low'}
+};
 
-let evs={}, wk=0, curKey=null, pendingImport=null;
+let evs={}, wk=0, curKey=null, curDay=0, pendingImport=null, selectedPriority='normal';
 
 /* ── Storage ── */
-function load(){ try{ evs=JSON.parse(localStorage.getItem(STORE)||'{}'); }catch(e){ evs={}; } }
+function load(){
+  try{
+    const raw=JSON.parse(localStorage.getItem(STORE)||'{}');
+    const normalized=normalizeEvents(raw);
+    evs=normalized.events;
+    if(JSON.stringify(raw)!==JSON.stringify(evs)) save();
+  }catch(e){
+    evs={};
+  }
+}
 function save(){ localStorage.setItem(STORE, JSON.stringify(evs)); }
 
 /* ── Date helpers ── */
@@ -421,22 +522,142 @@ function monday(offset){
 }
 function fmt(d){ return `${d.getMonth()+1}/${d.getDate()}`; }
 function isToday(d){ return d.toDateString()===new Date().toDateString(); }
-function eKey(d,h){ return `${wk}|${d}|${h}`; }
+function makeKey(week,day,startMin){ return `${week}|${day}|${startMin}`; }
+function eKey(d,startMin){ return makeKey(wk,d,startMin); }
 function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function clamp(n,min,max){ return Math.min(max,Math.max(min,n)); }
+function snapMinute(n){ return Math.round(n/SLOT_MIN)*SLOT_MIN; }
+function minToTime(min){
+  const h=Math.floor(min/60), m=min%60;
+  return `${h}:${String(m).padStart(2,'0')}`;
+}
+function durationLabel(start,end){
+  const total=Math.max(SLOT_MIN,end-start), h=Math.floor(total/60), m=total%60;
+  if(h&&m) return `${h}時間${m}分`;
+  if(h) return `${h}時間`;
+  return `${m}分`;
+}
+function normalizePriority(value){
+  return PRIORITY_ORDER.includes(value)?value:'normal';
+}
+function parseEventKey(key){
+  const parts=String(key).split('|');
+  if(parts.length!==3) return null;
+  const week=Number(parts[0]), day=Number(parts[1]), rawSlot=Number(parts[2]);
+  if(!Number.isInteger(week)||Math.abs(week)>10000) return null;
+  if(!Number.isInteger(day)||day<0||day>6) return null;
+  if(!Number.isInteger(rawSlot)) return null;
+  const startMin=rawSlot<60?rawSlot*60:rawSlot;
+  if(startMin<DAY_START||startMin>=DAY_END||startMin%SLOT_MIN!==0) return null;
+  return {week,day,startMin};
+}
+function normalizeEventData(key,ev){
+  const parsed=parseEventKey(key);
+  if(!parsed||!ev||typeof ev!=='object'||Array.isArray(ev)) return null;
+  const title=typeof ev.title==='string'?ev.title.trim():'';
+  const memo=typeof ev.memo==='string'?ev.memo.trim():'';
+  if(!title) return null;
+  const rawStart=Number.isInteger(ev.startMin)?ev.startMin:parsed.startMin;
+  const startMin=clamp(snapMinute(rawStart),DAY_START,DAY_END-SLOT_MIN);
+  const rawEnd=Number.isInteger(ev.endMin)?ev.endMin:startMin+60;
+  const endMin=clamp(snapMinute(rawEnd),startMin+SLOT_MIN,DAY_END);
+  return {
+    key: makeKey(parsed.week,parsed.day,startMin),
+    value: {
+      title: title.slice(0,120),
+      memo: memo.slice(0,1000),
+      startMin,
+      endMin,
+      priority: normalizePriority(ev.priority)
+    }
+  };
+}
 
 /* ── Navigation ── */
 function changeWeek(n){ wk+=n; render(); }
 function goToday(){ wk=0; render(); }
 
 /* ── Sheet ── */
-function openSheet(key, dIdx, hour, date, isEdit){
+function buildTimeOptions(){
+  const start=document.getElementById('sStart');
+  const end=document.getElementById('sEnd');
+  start.innerHTML='';
+  end.innerHTML='';
+  for(let min=DAY_START;min<DAY_END;min+=SLOT_MIN){
+    const opt=document.createElement('option');
+    opt.value=String(min);
+    opt.textContent=minToTime(min);
+    start.appendChild(opt);
+  }
+  for(let min=DAY_START+SLOT_MIN;min<=DAY_END;min+=SLOT_MIN){
+    const opt=document.createElement('option');
+    opt.value=String(min);
+    opt.textContent=minToTime(min);
+    end.appendChild(opt);
+  }
+}
+
+function renderPriorityChoices(){
+  const box=document.getElementById('sPriority');
+  box.innerHTML='';
+  PRIORITY_ORDER.forEach(key=>{
+    const btn=document.createElement('button');
+    btn.type='button';
+    btn.className=`prio-btn ${PRIORITIES[key].cls}${selectedPriority===key?' on':''}`;
+    btn.textContent=PRIORITIES[key].label;
+    btn.addEventListener('click',()=>{
+      selectedPriority=key;
+      renderPriorityChoices();
+    });
+    box.appendChild(btn);
+  });
+}
+
+function setSheetTimes(startMin,endMin){
+  const start=document.getElementById('sStart');
+  const end=document.getElementById('sEnd');
+  start.value=String(startMin);
+  end.value=String(endMin);
+  ensureEndAfterStart();
+  updateTimeSummary();
+}
+
+function ensureEndAfterStart(){
+  const start=document.getElementById('sStart');
+  const end=document.getElementById('sEnd');
+  const startMin=Number(start.value);
+  let endMin=Number(end.value);
+  if(!Number.isInteger(startMin)) return;
+  if(!Number.isInteger(endMin)||endMin<=startMin){
+    endMin=Math.min(startMin+60,DAY_END);
+    if(endMin<=startMin) endMin=startMin+SLOT_MIN;
+    end.value=String(endMin);
+  }
+  Array.from(end.options).forEach(opt=>{
+    opt.disabled=Number(opt.value)<=startMin;
+  });
+}
+
+function updateTimeSummary(){
+  const startMin=Number(document.getElementById('sStart').value);
+  const endMin=Number(document.getElementById('sEnd').value);
+  if(!Number.isInteger(startMin)||!Number.isInteger(endMin)) return;
+  document.getElementById('sTime').textContent=`${minToTime(startMin)} 〜 ${minToTime(endMin)}（${durationLabel(startMin,endMin)}）`;
+}
+
+function openSheet(key, dIdx, startMin, date, isEdit){
   curKey=key;
+  curDay=dIdx;
   const dn=['月曜日','火曜日','水曜日','木曜日','金曜日','土曜日','日曜日'];
   document.getElementById('sDay').textContent=`${fmt(date)} (${dn[dIdx]})`;
-  document.getElementById('sTime').textContent=`${hour}:00 〜 ${hour+1}:00`;
-  const ev=evs[key]||{};
-  document.getElementById('sTitle').value=ev.title||'';
-  document.getElementById('sMemo').value=ev.memo||'';
+  const ev=key?evs[key]:null;
+  const safeStart=clamp(snapMinute(ev?.startMin??startMin),DAY_START,DAY_END-SLOT_MIN);
+  const safeEnd=clamp(snapMinute(ev?.endMin??safeStart+60),safeStart+SLOT_MIN,DAY_END);
+  setSheetTimes(safeStart,safeEnd);
+  selectedPriority=normalizePriority(ev?.priority);
+  renderPriorityChoices();
+  document.getElementById('sTitle').value=ev?.title||'';
+  document.getElementById('sMemo').value=ev?.memo||'';
   document.getElementById('sDel').style.display=isEdit?'':'none';
   document.getElementById('ov').classList.add('on');
   setTimeout(()=>document.getElementById('sTitle').focus(), 80);
@@ -450,11 +671,27 @@ function saveEv(){
     setTimeout(()=>inp.style.borderColor='',1200);
     inp.focus(); return;
   }
-  evs[curKey]={title:t, memo:document.getElementById('sMemo').value.trim()};
+  const startMin=Number(document.getElementById('sStart').value);
+  const endMin=Number(document.getElementById('sEnd').value);
+  if(!Number.isInteger(startMin)||!Number.isInteger(endMin)||endMin<=startMin){
+    document.getElementById('sEnd').focus();
+    return;
+  }
+  const newKey=eKey(curDay,startMin);
+  if(newKey!==curKey&&evs[newKey]&&!confirm('同じ開始時刻に予定があります。上書きしますか？')) return;
+  if(curKey&&curKey!==newKey) delete evs[curKey];
+  evs[newKey]={
+    title:t,
+    memo:document.getElementById('sMemo').value.trim(),
+    startMin,
+    endMin,
+    priority:selectedPriority
+  };
+  curKey=newKey;
   save(); closeSheet(); render();
 }
 
-function delEv(){ delete evs[curKey]; save(); closeSheet(); render(); }
+function delEv(){ if(curKey) delete evs[curKey]; save(); closeSheet(); render(); }
 
 function closeSheet(){
   document.getElementById('ov').classList.remove('on');
@@ -462,6 +699,8 @@ function closeSheet(){
   // blur to dismiss keyboard
   document.getElementById('sTitle').blur();
   document.getElementById('sMemo').blur();
+  document.getElementById('sStart').blur();
+  document.getElementById('sEnd').blur();
 }
 
 /* Close on overlay tap */
@@ -473,6 +712,11 @@ document.getElementById('ov').addEventListener('click', e=>{
 document.getElementById('sTitle').addEventListener('keydown', e=>{
   if(e.key==='Enter'){ e.preventDefault(); saveEv(); }
 });
+document.getElementById('sStart').addEventListener('change', ()=>{
+  ensureEndAfterStart();
+  updateTimeSummary();
+});
+document.getElementById('sEnd').addEventListener('change', updateTimeSummary);
 
 /* ── Backup ── */
 function countEvents(src=evs){
@@ -491,7 +735,7 @@ function localStamp(){
 function makeBackup(reason='manual'){
   return {
     kind: BACKUP_KIND,
-    version: 1,
+    version: 2,
     app: '週間タイムブロッカー',
     storageKey: STORE,
     reason,
@@ -610,30 +854,19 @@ function normalizeEvents(raw){
   if(keys.length>5000) throw new Error('予定が多すぎます。5000件以下のバックアップを使ってください。');
 
   keys.forEach(key=>{
-    const ev=raw[key];
-    if(!isValidEventKey(key)||!ev||typeof ev!=='object'||Array.isArray(ev)){
+    const normalized=normalizeEventData(key,raw[key]);
+    if(!normalized){
       skipped++;
       return;
     }
-    const title=typeof ev.title==='string'?ev.title.trim():'';
-    const memo=typeof ev.memo==='string'?ev.memo.trim():'';
-    if(!title){
-      skipped++;
-      return;
-    }
-    out[key]={title:title.slice(0,120), memo:memo.slice(0,1000)};
+    out[normalized.key]=normalized.value;
   });
 
   return {events:out, count:Object.keys(out).length, skipped};
 }
 
 function isValidEventKey(key){
-  const parts=String(key).split('|');
-  if(parts.length!==3) return false;
-  const week=Number(parts[0]), day=Number(parts[1]), hour=Number(parts[2]);
-  return Number.isInteger(week)&&Math.abs(week)<=10000&&
-    Number.isInteger(day)&&day>=0&&day<=6&&
-    Number.isInteger(hour)&&HOURS.includes(hour);
+  return !!parseEventKey(key);
 }
 
 function showImportReview(name,data){
@@ -691,6 +924,10 @@ function render(){
 
   const g=document.getElementById('grid');
   g.innerHTML='';
+  const weekEvents=Object.entries(evs)
+    .map(([key,ev])=>({key,ev,meta:parseEventKey(key)}))
+    .filter(item=>item.meta&&item.meta.week===wk)
+    .sort((a,b)=>a.meta.day-b.meta.day||a.ev.startMin-b.ev.startMin||a.ev.endMin-b.ev.endMin);
 
   // Corner
   const co=document.createElement('div'); co.className='dh-corner'; g.appendChild(co);
@@ -708,29 +945,43 @@ function render(){
 
   // Hour rows
   HOURS.forEach(h=>{
+    const hourStart=h*60;
     const tl=document.createElement('div'); tl.className='tlbl';
     tl.textContent=`${h}:00`; g.appendChild(tl);
 
     for(let d=0;d<7;d++){
       const dt=new Date(m); dt.setDate(m.getDate()+d);
-      const key=eKey(d,h); const ev=evs[key];
       const cell=document.createElement('div'); cell.className='cell';
       if(d===5) cell.classList.add('sat');
       if(d===6) cell.classList.add('sun');
-      if(ev){
+      cell.addEventListener('click',()=>openSheet(null,d,hourStart,dt,false));
+
+      weekEvents
+        .filter(item=>item.meta.day===d&&item.ev.startMin>=hourStart&&item.ev.startMin<hourStart+60)
+        .forEach(item=>{
+        const {key,ev}=item;
+        const priority=normalizePriority(ev.priority);
+        const duration=Math.max(SLOT_MIN,ev.endMin-ev.startMin);
+        const top=3+((ev.startMin-hourStart)/60)*CELL_H;
+        const height=Math.max(26,(duration/60)*CELL_H-6);
         cell.classList.add('has-ev');
         const bl=document.createElement('div'); bl.className='ev';
-        bl.innerHTML=`<div class="ev-title">${esc(ev.title)}</div>${ev.memo?`<div class="ev-memo">${esc(ev.memo)}</div>`:''}`;
-        bl.addEventListener('click',()=>openSheet(key,d,h,dt,true));
+        bl.classList.add(PRIORITIES[priority].cls);
+        bl.style.top=`${top}px`;
+        bl.style.height=`${height}px`;
+        bl.innerHTML=`<div class="ev-time">${minToTime(ev.startMin)}〜${minToTime(ev.endMin)} / ${PRIORITIES[priority].label}</div><div class="ev-title">${esc(ev.title)}</div>${ev.memo?`<div class="ev-memo">${esc(ev.memo)}</div>`:''}`;
+        bl.addEventListener('click',e=>{
+          e.stopPropagation();
+          openSheet(key,d,ev.startMin,dt,true);
+        });
         cell.appendChild(bl);
-      } else {
-        cell.addEventListener('click',()=>openSheet(key,d,h,dt,false));
-      }
+      });
       g.appendChild(cell);
     }
   });
 }
 
+buildTimeOptions();
 load(); render();
 </script>
 </body>
