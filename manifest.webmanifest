@@ -1,0 +1,27 @@
+{
+  "id": "./",
+  "name": "週間タイムブロッカー",
+  "short_name": "週間ブロッカー",
+  "description": "スマートフォンで使いやすい週間タイムブロッカーです。",
+  "lang": "ja",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#F7F8FB",
+  "theme_color": "#1B2A3F",
+  "icons": [
+    {
+      "src": "./icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

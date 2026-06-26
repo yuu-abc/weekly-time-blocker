@@ -3,8 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="スマートフォンで使いやすい週間タイムブロッカー">
+  <meta name="theme-color" content="#1B2A3F">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="週間ブロッカー">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="apple-touch-icon" href="./apple-touch-icon.png">
   <title>週間タイムブロッカー</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -988,8 +993,20 @@ function render(){
   });
 }
 
+function registerServiceWorker(){
+  if(!('serviceWorker' in navigator)) return;
+  if(!['http:','https:'].includes(location.protocol)) return;
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('./sw.js', {scope:'./'})
+      .then(()=>navigator.serviceWorker.ready)
+      .then(()=>{ document.documentElement.dataset.offlineReady='true'; })
+      .catch(()=>{ document.documentElement.dataset.offlineReady='false'; });
+  });
+}
+
 buildTimeOptions();
 load(); render();
+registerServiceWorker();
 </script>
 </body>
 </html>
