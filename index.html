@@ -2,9 +2,14 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="スマートフォンで使いやすい週間タイムブロッカー">
+  <meta name="theme-color" content="#1B2A3F">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="週間ブロッカー">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="apple-touch-icon" href="./apple-touch-icon.png">
   <title>週間タイムブロッカー</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -30,8 +35,9 @@
       --sun: #FFF3F3;
       --header-h: 56px;
       --dayrow-h: 52px;
-      --cell-h: 52px;
-      --tlbl-w: 38px;
+      --cell-h: 60px;
+      --tlbl-w: 44px;
+      --day-col-min: 96px;
     }
 
     html, body {
@@ -80,8 +86,9 @@
       top: var(--header-h);
       bottom: 0; left: 0; right: 0;
       overflow-y: auto;
-      overflow-x: hidden;
+      overflow-x: auto;
       -webkit-overflow-scrolling: touch;
+      overscroll-behavior-x: contain;
     }
 
     .backup-fab {
@@ -105,8 +112,9 @@
     /* ── Grid ── */
     .grid {
       display: grid;
-      grid-template-columns: var(--tlbl-w) repeat(7, 1fr);
-      min-width: 320px;
+      grid-template-columns: var(--tlbl-w) repeat(7, minmax(var(--day-col-min), 1fr));
+      width: 100%;
+      min-width: 716px;
       padding-bottom: 82px;
     }
 
@@ -115,7 +123,7 @@
       height: var(--dayrow-h);
       background: var(--g100);
       border-bottom: 1px solid var(--g200);
-      position: sticky; top: 0; z-index: 100;
+      position: sticky; top: 0; left: 0; z-index: 160;
     }
     .dh {
       height: var(--dayrow-h);
@@ -131,18 +139,19 @@
     .dh.sun { background: var(--sun); }
     .dh.today .dnum { color: var(--indigo); }
     .dh.today { border-bottom: 2px solid var(--indigo); }
-    .dname { font-size: 9px; font-weight: 700; color: var(--g400); letter-spacing: .08em; }
-    .dnum { font-size: 17px; font-weight: 700; line-height: 1.2; margin-top: 1px; }
+    .dname { font-size: 10px; font-weight: 700; color: var(--g400); letter-spacing: .08em; }
+    .dnum { font-size: 19px; font-weight: 700; line-height: 1.2; margin-top: 1px; }
 
     /* Time label */
     .tlbl {
       height: var(--cell-h);
-      font-size: 9px; color: var(--g400);
-      text-align: right; padding-right: 5px; padding-top: 5px;
+      font-size: 10px; color: var(--g400);
+      text-align: right; padding-right: 6px; padding-top: 6px;
       border-top: 1px solid var(--g200);
       background: var(--g100);
       font-weight: 500; letter-spacing: .02em;
       user-select: none;
+      position: sticky; left: 0; z-index: 60;
     }
 
     /* Cell */
@@ -166,11 +175,11 @@
       position: absolute;
       left: 0;
       right: 2px;
-      min-height: 26px;
+      min-height: 30px;
       border-left: 3px solid var(--normal);
       border-radius: 0 5px 5px 0;
       background: var(--normal-light);
-      padding: 3px 4px;
+      padding: 5px 6px;
       overflow: hidden;
       display: flex; flex-direction: column; justify-content: center;
       z-index: 5;
@@ -182,24 +191,26 @@
     .ev.p-normal { border-left-color: var(--normal); background: var(--normal-light); }
     .ev.p-low { border-left-color: var(--low); background: var(--low-light); }
     .ev-title {
-      font-size: 9px; font-weight: 700; color: var(--normal);
+      font-size: 12px; font-weight: 700; color: var(--normal);
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-      line-height: 1.3;
+      line-height: 1.25;
     }
     .ev.p-urgent .ev-title { color: var(--urgent); }
     .ev.p-high .ev-title { color: var(--high); }
     .ev.p-normal .ev-title { color: var(--normal); }
     .ev.p-low .ev-title { color: var(--low); }
     .ev-time {
-      font-size: 7px; color: var(--g600);
+      font-size: 10px; color: var(--g600);
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-      line-height: 1.2; margin-bottom: 1px;
+      line-height: 1.2; margin-bottom: 2px;
     }
     .ev-memo {
-      font-size: 8px; color: var(--g600);
+      font-size: 10px; color: var(--g600);
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-      margin-top: 1px;
+      margin-top: 2px;
     }
+    .ev.compact .ev-time,
+    .ev.compact .ev-memo { display: none; }
 
     /* ── Bottom Sheet Modal ── */
     .sheet-overlay {
@@ -488,7 +499,7 @@ const HOURS = Array.from({length:17},(_,i)=>i+6);
 const DAY_START = 6 * 60;
 const DAY_END = 23 * 60;
 const SLOT_MIN = 15;
-const CELL_H = 52;
+const CELL_H = 60;
 const DJP   = ['月','火','水','木','金','土','日'];
 const STORE  = 'tblocker_v2';
 const BACKUP_KIND = 'weekly-time-blocker-mobile-backup';
@@ -967,6 +978,7 @@ function render(){
         cell.classList.add('has-ev');
         const bl=document.createElement('div'); bl.className='ev';
         bl.classList.add(PRIORITIES[priority].cls);
+        if(duration<45) bl.classList.add('compact');
         bl.style.top=`${top}px`;
         bl.style.height=`${height}px`;
         bl.innerHTML=`<div class="ev-time">${minToTime(ev.startMin)}〜${minToTime(ev.endMin)} / ${PRIORITIES[priority].label}</div><div class="ev-title">${esc(ev.title)}</div>${ev.memo?`<div class="ev-memo">${esc(ev.memo)}</div>`:''}`;
@@ -981,8 +993,20 @@ function render(){
   });
 }
 
+function registerServiceWorker(){
+  if(!('serviceWorker' in navigator)) return;
+  if(!['http:','https:'].includes(location.protocol)) return;
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('./sw.js', {scope:'./'})
+      .then(()=>navigator.serviceWorker.ready)
+      .then(()=>{ document.documentElement.dataset.offlineReady='true'; })
+      .catch(()=>{ document.documentElement.dataset.offlineReady='false'; });
+  });
+}
+
 buildTimeOptions();
 load(); render();
+registerServiceWorker();
 </script>
 </body>
 </html>
