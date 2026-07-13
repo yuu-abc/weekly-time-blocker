@@ -2,1011 +2,1232 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="スマートフォンで使いやすい週間タイムブロッカー">
-  <meta name="theme-color" content="#1B2A3F">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="毎週の予定をスマートに組み立てるモバイルタイムブロッカー">
+  <meta name="theme-color" content="#111018">
+  <meta name="color-scheme" content="light">
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="週間ブロッカー">
-  <link rel="manifest" href="./manifest.webmanifest">
-  <link rel="apple-touch-icon" href="./apple-touch-icon.png">
-  <title>週間タイムブロッカー</title>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="WEEK FLOW">
+  <title>WEEK FLOW｜週間タイムブロッカー</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
     :root {
-      --navy: #1B2A3F;
-      --indigo: #4B6BFB;
-      --indigo-light: #EEF2FF;
-      --urgent: #DC2626;
-      --urgent-light: #FEF2F2;
-      --high: #D97706;
-      --high-light: #FFF7ED;
-      --normal: #4B6BFB;
-      --normal-light: #EEF2FF;
-      --low: #059669;
-      --low-light: #ECFDF5;
-      --g100: #F7F8FB;
-      --g200: #E8ECF2;
-      --g400: #8A96A8;
-      --g600: #5A6478;
-      --white: #fff;
-      --sat: #EBF5FF;
-      --sun: #FFF3F3;
-      --header-h: 56px;
-      --dayrow-h: 52px;
-      --cell-h: 60px;
-      --tlbl-w: 44px;
-      --day-col-min: 96px;
+      --ink: #111018;
+      --ink-2: #262431;
+      --muted: #777382;
+      --muted-2: #a9a5b1;
+      --line: #e8e5ec;
+      --paper: #f6f4f8;
+      --card: #ffffff;
+      --violet: #7657ff;
+      --violet-dark: #5d3df2;
+      --violet-soft: #eeeaff;
+      --lime: #d9ff66;
+      --danger: #ed4967;
+      --danger-soft: #fff0f3;
+      --amber: #f59e42;
+      --amber-soft: #fff4e7;
+      --teal: #18a58f;
+      --teal-soft: #e7faf6;
+      --hour-h: 72px;
+      --rail-w: 54px;
+      --radius: 22px;
+      --shadow: 0 14px 36px rgba(27, 22, 45, .10);
     }
 
-    html, body {
-      height: 100%;
+    html { min-height: 100%; background: var(--paper); }
+    body {
+      min-height: 100%;
+      font-family: "Noto Sans JP", "Hiragino Sans", "Yu Gothic UI", system-ui, -apple-system, sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 88% 4%, rgba(118,87,255,.13), transparent 22rem),
+        var(--paper);
+      overscroll-behavior-y: contain;
+    }
+    button, input, textarea, select { font: inherit; }
+    button { color: inherit; }
+    button, [role="button"] { touch-action: manipulation; }
+
+    /* App header */
+    .app-header {
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      padding: calc(10px + env(safe-area-inset-top)) 16px 12px;
+      color: #fff;
+      background: rgba(17,16,24,.96);
+      box-shadow: 0 8px 30px rgba(17,16,24,.18);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+    .topline, .week-nav { display: flex; align-items: center; justify-content: space-between; }
+    .brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
+    .brand-mark {
+      display: grid;
+      place-items: center;
+      width: 34px;
+      height: 34px;
+      border-radius: 11px;
+      color: var(--ink);
+      background: var(--lime);
+      box-shadow: 0 0 0 1px rgba(255,255,255,.12) inset;
+    }
+    .brand-mark svg { width: 18px; height: 18px; }
+    .brand-copy { line-height: 1; }
+    .brand-name { font-size: 15px; font-weight: 900; letter-spacing: .12em; }
+    .brand-sub { display: block; margin-top: 5px; color: #aaa6b7; font-size: 9px; letter-spacing: .16em; }
+    .icon-btn {
+      display: grid;
+      place-items: center;
+      width: 44px;
+      height: 44px;
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 14px;
+      color: #fff;
+      background: rgba(255,255,255,.06);
+      cursor: pointer;
+    }
+    .icon-btn:active { transform: scale(.96); background: rgba(255,255,255,.12); }
+    .icon-btn svg { width: 20px; height: 20px; }
+    .week-nav { margin-top: 12px; }
+    .week-move {
+      width: 44px;
+      height: 40px;
+      border: 0;
+      border-radius: 13px;
+      color: #d7d4de;
+      background: transparent;
+      font-size: 26px;
+      line-height: 1;
+      cursor: pointer;
+    }
+    .week-move:active { background: rgba(255,255,255,.08); }
+    .week-title { text-align: center; }
+    .week-title strong { display: block; font-size: 15px; letter-spacing: .01em; }
+    .week-title button {
+      min-height: 26px;
+      margin-top: 2px;
+      padding: 2px 10px;
+      border: 0;
+      border-radius: 999px;
+      color: var(--lime);
+      background: transparent;
+      font-size: 10px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .week-title button:active { background: rgba(217,255,102,.1); }
+
+    .day-strip {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 5px;
+      max-width: 760px;
+      margin: 10px auto 0;
+    }
+    .day-btn {
+      min-width: 0;
+      min-height: 56px;
+      padding: 6px 2px;
+      border: 1px solid transparent;
+      border-radius: 15px;
+      color: #918d9d;
+      background: transparent;
+      cursor: pointer;
+    }
+    .day-btn .dow { display: block; font-size: 10px; font-weight: 800; }
+    .day-btn .dnum { display: block; margin-top: 4px; font-size: 18px; font-weight: 850; line-height: 1; }
+    .day-btn.today:not(.selected) { color: var(--lime); border-color: rgba(217,255,102,.28); }
+    .day-btn.selected {
+      color: var(--ink);
+      background: #fff;
+      box-shadow: 0 6px 20px rgba(0,0,0,.22);
+    }
+    .day-btn.selected.today { background: var(--lime); }
+
+    /* Main */
+    .main { width: min(100%, 760px); margin: 0 auto; padding: 18px 14px calc(110px + env(safe-area-inset-bottom)); }
+    .day-hero {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 6px 4px 18px;
+    }
+    .eyebrow { color: var(--violet); font-size: 11px; font-weight: 900; letter-spacing: .12em; }
+    .day-heading { margin-top: 5px; font-size: clamp(24px, 7vw, 32px); font-weight: 900; letter-spacing: -.045em; line-height: 1.15; }
+    .day-heading span { color: var(--muted-2); font-weight: 700; }
+    .day-stats { display: flex; gap: 7px; padding-top: 2px; flex: 0 0 auto; }
+    .stat {
+      min-width: 58px;
+      padding: 9px 8px;
+      border: 1px solid rgba(255,255,255,.9);
+      border-radius: 15px;
+      text-align: center;
+      background: rgba(255,255,255,.68);
+      box-shadow: 0 7px 20px rgba(38,36,49,.05);
+    }
+    .stat strong { display: block; font-size: 15px; }
+    .stat span { display: block; margin-top: 2px; color: var(--muted); font-size: 9px; font-weight: 700; }
+
+    .empty-banner {
+      display: none;
+      align-items: center;
+      gap: 11px;
+      margin-bottom: 12px;
+      padding: 13px 15px;
+      border: 1px solid #e6e0ff;
+      border-radius: 16px;
+      color: #5a4a8d;
+      background: rgba(238,234,255,.78);
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .empty-banner.on { display: flex; }
+    .empty-banner span:first-child { font-size: 18px; }
+
+    .timeline-card {
+      position: relative;
       overflow: hidden;
-      font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Segoe UI', sans-serif;
-      background: var(--g100);
-      color: var(--navy);
+      border: 1px solid rgba(255,255,255,.9);
+      border-radius: var(--radius);
+      background: var(--card);
+      box-shadow: var(--shadow);
     }
-
-    /* ── Header ── */
-    .header {
-      position: fixed;
-      top: 0; left: 0; right: 0;
-      height: var(--header-h);
-      background: var(--white);
-      border-bottom: 1.5px solid var(--navy);
+    .timeline-head {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 14px;
-      z-index: 300;
+      min-height: 48px;
+      padding: 0 16px;
+      border-bottom: 1px solid var(--line);
+      background: #fcfbfd;
     }
-    .app-title { font-size: 15px; font-weight: 700; }
-    .nav { display: flex; align-items: center; gap: 6px; }
-    .nav-btn {
-      width: 34px; height: 34px;
-      border: 1px solid var(--g200); border-radius: 8px;
-      background: var(--white); font-size: 18px; color: var(--g600);
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer; user-select: none;
-    }
-    .nav-btn:active { background: var(--g100); }
-    .week-lbl { font-size: 12px; color: var(--g600); font-weight: 500; text-align: center; min-width: 120px; }
-    .today-btn {
-      font-size: 12px; padding: 6px 12px;
-      border: 1px solid var(--g200); border-radius: 8px;
-      background: var(--white); color: var(--g600); font-weight: 600;
-      cursor: pointer;
-    }
-    .today-btn:active { background: var(--g100); }
-
-    /* ── Main scroll area ── */
-    .scroll-area {
-      position: fixed;
-      top: var(--header-h);
-      bottom: 0; left: 0; right: 0;
-      overflow-y: auto;
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
-      overscroll-behavior-x: contain;
-    }
-
-    .backup-fab {
-      position: fixed;
-      right: 14px;
-      bottom: calc(14px + env(safe-area-inset-bottom));
-      z-index: 260;
-      border: 1px solid var(--navy);
-      border-radius: 12px;
-      background: var(--navy);
-      color: #fff;
-      padding: 11px 13px;
-      font-size: 12px;
-      font-weight: 700;
-      font-family: inherit;
-      box-shadow: 0 10px 28px rgba(27, 42, 63, .22);
-      cursor: pointer;
-    }
-    .backup-fab:active { background: #111D2E; transform: translateY(1px); }
-
-    /* ── Grid ── */
-    .grid {
-      display: grid;
-      grid-template-columns: var(--tlbl-w) repeat(7, minmax(var(--day-col-min), 1fr));
-      width: 100%;
-      min-width: 716px;
-      padding-bottom: 82px;
-    }
-
-    /* Day header row — sticky inside scroll */
-    .dh-corner {
-      height: var(--dayrow-h);
-      background: var(--g100);
-      border-bottom: 1px solid var(--g200);
-      position: sticky; top: 0; left: 0; z-index: 160;
-    }
-    .dh {
-      height: var(--dayrow-h);
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      background: var(--white);
-      border-bottom: 1px solid var(--navy);
-      border-left: 1px solid var(--g200);
-      position: sticky; top: 0; z-index: 100;
-      cursor: default;
-    }
-    .dh.sat { background: var(--sat); }
-    .dh.sun { background: var(--sun); }
-    .dh.today .dnum { color: var(--indigo); }
-    .dh.today { border-bottom: 2px solid var(--indigo); }
-    .dname { font-size: 10px; font-weight: 700; color: var(--g400); letter-spacing: .08em; }
-    .dnum { font-size: 19px; font-weight: 700; line-height: 1.2; margin-top: 1px; }
-
-    /* Time label */
-    .tlbl {
-      height: var(--cell-h);
-      font-size: 10px; color: var(--g400);
-      text-align: right; padding-right: 6px; padding-top: 6px;
-      border-top: 1px solid var(--g200);
-      background: var(--g100);
-      font-weight: 500; letter-spacing: .02em;
-      user-select: none;
-      position: sticky; left: 0; z-index: 60;
-    }
-
-    /* Cell */
-    .cell {
-      height: var(--cell-h);
-      border-top: 1px solid var(--g200);
-      border-left: 1px solid var(--g200);
+    .timeline-head strong { font-size: 12px; letter-spacing: .08em; }
+    .timeline-head span { color: var(--muted); font-size: 10px; }
+    .timeline {
       position: relative;
-      cursor: pointer;
-      background: var(--white);
-      -webkit-user-select: none;
+      height: calc(var(--hour-h) * 18);
+      margin-left: var(--rail-w);
+      cursor: crosshair;
+      background-color: #fff;
+      background-image:
+        linear-gradient(to bottom, transparent calc(25% - 1px), #f2eff5 calc(25% - 1px), #f2eff5 25%, transparent 25%, transparent calc(50% - 1px), #f2eff5 calc(50% - 1px), #f2eff5 50%, transparent 50%, transparent calc(75% - 1px), #f2eff5 calc(75% - 1px), #f2eff5 75%, transparent 75%),
+        repeating-linear-gradient(to bottom, transparent 0, transparent calc(var(--hour-h) - 1px), var(--line) calc(var(--hour-h) - 1px), var(--line) var(--hour-h));
+      background-size: 100% var(--hour-h), 100% var(--hour-h);
     }
-    .cell.sat { background: #F6FBFF; }
-    .cell.sun { background: #FFF7F7; }
-    .cell:active { background: var(--indigo-light); }
-    .cell.has-ev { cursor: pointer; }
-    .cell.has-ev:active { background: var(--white); }
-
-    /* Event pill */
-    .ev {
+    .time-rail { position: absolute; inset: 48px auto 0 0; width: var(--rail-w); pointer-events: none; }
+    .time-label {
       position: absolute;
-      left: 0;
-      right: 2px;
-      min-height: 30px;
-      border-left: 3px solid var(--normal);
-      border-radius: 0 5px 5px 0;
-      background: var(--normal-light);
-      padding: 5px 6px;
+      right: 9px;
+      width: 40px;
+      transform: translateY(-7px);
+      color: var(--muted-2);
+      text-align: right;
+      font-size: 10px;
+      font-variant-numeric: tabular-nums;
+    }
+    .time-label:first-child { transform: translateY(8px); }
+    .event-layer { position: absolute; inset: 0; pointer-events: none; }
+    .event {
+      --ev-color: var(--violet);
+      --ev-bg: var(--violet-soft);
+      position: absolute;
+      z-index: 4;
+      min-height: 34px;
+      padding: 8px 9px 7px 12px;
       overflow: hidden;
-      display: flex; flex-direction: column; justify-content: center;
-      z-index: 5;
-      box-shadow: 0 5px 12px rgba(27, 42, 63, .08);
-    }
-    .ev:active { filter: brightness(.98); }
-    .ev.p-urgent { border-left-color: var(--urgent); background: var(--urgent-light); }
-    .ev.p-high { border-left-color: var(--high); background: var(--high-light); }
-    .ev.p-normal { border-left-color: var(--normal); background: var(--normal-light); }
-    .ev.p-low { border-left-color: var(--low); background: var(--low-light); }
-    .ev-title {
-      font-size: 12px; font-weight: 700; color: var(--normal);
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-      line-height: 1.25;
-    }
-    .ev.p-urgent .ev-title { color: var(--urgent); }
-    .ev.p-high .ev-title { color: var(--high); }
-    .ev.p-normal .ev-title { color: var(--normal); }
-    .ev.p-low .ev-title { color: var(--low); }
-    .ev-time {
-      font-size: 10px; color: var(--g600);
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-      line-height: 1.2; margin-bottom: 2px;
-    }
-    .ev-memo {
-      font-size: 10px; color: var(--g600);
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-      margin-top: 2px;
-    }
-    .ev.compact .ev-time,
-    .ev.compact .ev-memo { display: none; }
-
-    /* ── Bottom Sheet Modal ── */
-    .sheet-overlay {
-      display: none;
-      position: fixed; inset: 0;
-      background: rgba(10,20,40,.4);
-      z-index: 500;
-      align-items: flex-end;
-    }
-    .sheet-overlay.on { display: flex; }
-
-    .sheet {
-      width: 100%;
-      background: var(--white);
-      border-radius: 20px 20px 0 0;
-      padding: 0 20px 32px;
-      box-shadow: 0 -8px 40px rgba(10,20,40,.18);
-      animation: slideUp .28s cubic-bezier(.32,1.18,.5,1);
-      max-height: 90vh;
-      overflow-y: auto;
-    }
-
-    @keyframes slideUp {
-      from { transform: translateY(100%); }
-      to   { transform: translateY(0); }
-    }
-
-    .sheet-handle {
-      width: 36px; height: 4px;
-      background: var(--g200); border-radius: 2px;
-      margin: 12px auto 20px;
-    }
-
-    .s-day { font-size: 11px; font-weight: 700; color: var(--g400); letter-spacing: .08em; text-transform: uppercase; }
-    .s-time { font-size: 21px; font-weight: 700; margin: 3px 0 16px; }
-    .s-lbl {
-      display: block; font-size: 11px; font-weight: 700;
-      color: var(--g400); letter-spacing: .08em; text-transform: uppercase;
-      margin-bottom: 6px;
-    }
-    .s-inp, .s-txt, .s-select {
-      width: 100%; border: 1.5px solid var(--g200); border-radius: 10px;
-      padding: 12px 14px; font-size: 15px; color: var(--navy);
-      outline: none; font-family: inherit; margin-bottom: 16px;
-      -webkit-appearance: none;
-      appearance: none;
-      background: var(--white);
-    }
-    .s-inp:focus, .s-txt:focus, .s-select:focus {
-      border-color: var(--indigo);
-      box-shadow: 0 0 0 3px rgba(75,107,251,.12);
-    }
-    .s-txt { resize: none; height: 88px; }
-    .s-time-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-    }
-    .prio-row {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 7px;
-      margin-bottom: 16px;
-    }
-    .prio-btn {
-      min-height: 42px;
-      border: 1.5px solid var(--g200);
+      border: 0;
+      border-left: 4px solid var(--ev-color);
       border-radius: 10px;
-      background: var(--white);
-      color: var(--g600);
-      font-size: 12px;
-      font-weight: 700;
-      font-family: inherit;
+      color: var(--ink-2);
+      text-align: left;
+      background: var(--ev-bg);
+      box-shadow: 0 5px 14px rgba(27,22,45,.10);
+      cursor: pointer;
+      pointer-events: auto;
+    }
+    .event:active { transform: scale(.985); filter: brightness(.98); }
+    .event.p-urgent { --ev-color: var(--danger); --ev-bg: var(--danger-soft); }
+    .event.p-high { --ev-color: var(--amber); --ev-bg: var(--amber-soft); }
+    .event.p-low { --ev-color: var(--teal); --ev-bg: var(--teal-soft); }
+    .event.overlap { outline: 2px solid var(--danger); outline-offset: -2px; }
+    .ev-time { display: block; color: var(--ev-color); font-size: 9px; font-weight: 900; letter-spacing: .03em; white-space: nowrap; }
+    .ev-title { display: block; margin-top: 2px; overflow: hidden; font-size: 12px; font-weight: 850; line-height: 1.25; text-overflow: ellipsis; white-space: nowrap; }
+    .ev-memo { display: block; margin-top: 3px; overflow: hidden; color: var(--muted); font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
+    .event.compact { padding-top: 5px; padding-bottom: 4px; }
+    .event.compact .ev-memo { display: none; }
+    .event.tiny .ev-time, .event.tiny .ev-memo { display: none; }
+    .event.tiny .ev-title { margin-top: 0; font-size: 10px; }
+    .now-line {
+      position: absolute;
+      z-index: 8;
+      left: -5px;
+      right: 0;
+      height: 2px;
+      background: var(--danger);
+      pointer-events: none;
+    }
+    .now-line::before {
+      content: "";
+      position: absolute;
+      left: -4px;
+      top: -4px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--danger);
+      box-shadow: 0 0 0 4px rgba(237,73,103,.13);
+    }
+
+    .fab {
+      position: fixed;
+      z-index: 180;
+      right: max(18px, calc((100vw - 760px) / 2 + 18px));
+      bottom: calc(20px + env(safe-area-inset-bottom));
       display: flex;
       align-items: center;
-      justify-content: center;
-      gap: 5px;
-      cursor: pointer;
-    }
-    .prio-btn::before {
-      content: "";
-      width: 9px;
-      height: 9px;
-      border-radius: 50%;
-      background: var(--normal);
-      flex: 0 0 auto;
-    }
-    .prio-btn.p-urgent::before { background: var(--urgent); }
-    .prio-btn.p-high::before { background: var(--high); }
-    .prio-btn.p-normal::before { background: var(--normal); }
-    .prio-btn.p-low::before { background: var(--low); }
-    .prio-btn.on.p-urgent { border-color: var(--urgent); background: var(--urgent-light); color: var(--urgent); }
-    .prio-btn.on.p-high { border-color: var(--high); background: var(--high-light); color: var(--high); }
-    .prio-btn.on.p-normal { border-color: var(--normal); background: var(--normal-light); color: var(--normal); }
-    .prio-btn.on.p-low { border-color: var(--low); background: var(--low-light); color: var(--low); }
-
-    .s-acts { display: flex; flex-direction: column; gap: 10px; }
-    .s-save {
-      width: 100%; padding: 15px;
-      background: var(--indigo); color: #fff;
-      border: none; border-radius: 12px;
-      font-size: 15px; font-weight: 700; cursor: pointer;
-    }
-    .s-save:active { background: #3a5be0; }
-    .s-row { display: flex; gap: 10px; }
-    .s-del {
-      flex: 1; padding: 13px;
-      background: #FEF2F2; color: #DC2626;
-      border: none; border-radius: 12px;
-      font-size: 14px; font-weight: 600; cursor: pointer;
-    }
-    .s-del:active { background: #FEE2E2; }
-    .s-cancel {
-      flex: 1; padding: 13px;
-      background: var(--g100); color: var(--g600);
-      border: none; border-radius: 12px;
-      font-size: 14px; font-weight: 600; cursor: pointer;
-    }
-    .s-cancel:active { background: var(--g200); }
-
-    /* ── Backup ── */
-    .backup-sheet { padding-bottom: calc(28px + env(safe-area-inset-bottom)); }
-    .b-title { font-size: 19px; font-weight: 700; margin-bottom: 5px; }
-    .b-meta { font-size: 12px; color: var(--g600); line-height: 1.5; margin-bottom: 18px; }
-    .b-section {
-      border-top: 1px solid var(--g200);
-      padding-top: 14px;
-      margin-top: 14px;
-    }
-    .b-lbl {
-      display: block;
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--g400);
-      letter-spacing: .08em;
-      margin-bottom: 8px;
-    }
-    .b-actions { display: flex; flex-direction: column; gap: 10px; }
-    .b-primary,
-    .b-secondary,
-    .b-danger,
-    .b-close {
-      width: 100%;
-      border: none;
-      border-radius: 12px;
-      padding: 13px;
+      gap: 9px;
+      min-height: 56px;
+      padding: 0 20px 0 15px;
+      border: 0;
+      border-radius: 18px;
+      color: #fff;
+      background: var(--violet);
+      box-shadow: 0 14px 32px rgba(93,61,242,.34);
       font-size: 14px;
-      font-weight: 700;
-      font-family: inherit;
+      font-weight: 850;
       cursor: pointer;
     }
-    .b-primary { background: var(--indigo); color: #fff; }
-    .b-primary:active { background: #3a5be0; }
-    .b-secondary { background: var(--g100); color: var(--g600); border: 1px solid var(--g200); }
-    .b-secondary:active { background: var(--g200); }
-    .b-danger { background: #FEF2F2; color: #DC2626; }
-    .b-danger:active { background: #FEE2E2; }
-    .b-close { background: transparent; color: var(--g600); margin-top: 12px; }
-    .b-close:active { background: var(--g100); }
-    .b-review {
-      display: none;
-      border: 1.5px solid var(--g200);
-      border-radius: 12px;
-      padding: 13px;
-      margin-top: 14px;
-      background: #FBFCFF;
-    }
-    .b-review.on { display: block; }
-    .b-review-title { font-size: 14px; font-weight: 700; margin-bottom: 9px; }
-    .b-list { display: grid; gap: 7px; margin-bottom: 12px; }
-    .b-row { display: flex; justify-content: space-between; gap: 12px; font-size: 12px; color: var(--g600); }
-    .b-row strong {
-      color: var(--navy);
-      text-align: right;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-    .b-status {
-      min-height: 18px;
-      margin-top: 12px;
-      font-size: 12px;
-      line-height: 1.5;
-      color: var(--g600);
-    }
-    .b-status.ok { color: #047857; }
-    .b-status.warn { color: #B45309; }
-    .b-status.err { color: #DC2626; }
+    .fab:active { transform: translateY(2px); background: var(--violet-dark); }
+    .fab-plus { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 10px; color: var(--ink); background: var(--lime); font-size: 24px; font-weight: 500; }
 
-    /* ── Print ── */
+    /* Bottom sheets */
+    .sheet-overlay {
+      display: none;
+      position: fixed;
+      z-index: 500;
+      inset: 0;
+      align-items: flex-end;
+      justify-content: center;
+      padding-top: env(safe-area-inset-top);
+      background: rgba(17,16,24,.58);
+      backdrop-filter: blur(5px);
+      -webkit-backdrop-filter: blur(5px);
+    }
+    .sheet-overlay.on { display: flex; }
+    .sheet {
+      width: min(100%, 600px);
+      max-height: 94dvh;
+      overflow-y: auto;
+      border-radius: 28px 28px 0 0;
+      background: #fff;
+      box-shadow: 0 -20px 50px rgba(0,0,0,.22);
+      animation: sheetUp .25s cubic-bezier(.2,.8,.2,1);
+      overscroll-behavior: contain;
+    }
+    @keyframes sheetUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+    @media (min-width: 680px) {
+      .sheet-overlay { align-items: center; padding: 24px; }
+      .sheet { border-radius: 28px; max-height: min(860px, 92dvh); }
+    }
+    .sheet-handle { width: 42px; height: 5px; margin: 10px auto 4px; border-radius: 999px; background: #dedbe3; }
+    .sheet-top { display: flex; align-items: center; justify-content: space-between; padding: 8px 18px 12px; border-bottom: 1px solid var(--line); }
+    .sheet-top-copy small { display: block; color: var(--violet); font-size: 10px; font-weight: 900; letter-spacing: .12em; }
+    .sheet-top-copy strong { display: block; margin-top: 3px; font-size: 20px; letter-spacing: -.03em; }
+    .sheet-close {
+      display: grid;
+      place-items: center;
+      width: 44px;
+      height: 44px;
+      border: 0;
+      border-radius: 14px;
+      color: var(--muted);
+      background: var(--paper);
+      font-size: 24px;
+      cursor: pointer;
+    }
+    .sheet-body { padding: 18px 18px calc(24px + env(safe-area-inset-bottom)); }
+    .field { margin-bottom: 17px; }
+    .field-label { display: flex; align-items: center; justify-content: space-between; margin-bottom: 7px; color: var(--ink-2); font-size: 11px; font-weight: 850; letter-spacing: .06em; }
+    .field-label span { color: var(--muted-2); font-size: 9px; font-weight: 700; }
+    .input, .textarea, .select {
+      width: 100%;
+      min-height: 50px;
+      border: 1.5px solid var(--line);
+      border-radius: 14px;
+      outline: none;
+      color: var(--ink);
+      background: #fbfafc;
+      font-size: 15px;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    .input, .textarea { padding: 13px 14px; }
+    .select { padding: 0 38px 0 14px; background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%); background-position: calc(100% - 18px) 21px, calc(100% - 13px) 21px; background-size: 5px 5px; background-repeat: no-repeat; }
+    .textarea { min-height: 78px; resize: vertical; }
+    .input:focus, .textarea:focus, .select:focus { border-color: var(--violet); box-shadow: 0 0 0 4px rgba(118,87,255,.11); background: #fff; }
+    .time-row { display: grid; grid-template-columns: 1fr 18px 1fr; align-items: end; gap: 8px; }
+    .time-dash { padding-bottom: 16px; color: var(--muted-2); text-align: center; }
+    .duration-pills { display: flex; gap: 7px; margin-top: 9px; overflow-x: auto; scrollbar-width: none; }
+    .duration-pills::-webkit-scrollbar { display: none; }
+    .quick-btn {
+      min-height: 36px;
+      padding: 0 12px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--muted);
+      background: #fff;
+      font-size: 11px;
+      font-weight: 800;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .quick-btn:active { color: var(--violet); border-color: var(--violet); background: var(--violet-soft); }
+    .prio-row { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 7px; }
+    .prio-btn {
+      min-height: 44px;
+      border: 1.5px solid var(--line);
+      border-radius: 13px;
+      color: var(--muted);
+      background: #fff;
+      font-size: 11px;
+      font-weight: 850;
+      cursor: pointer;
+    }
+    .prio-btn::before { content: ""; display: inline-block; width: 7px; height: 7px; margin-right: 5px; border-radius: 50%; vertical-align: 1px; background: var(--violet); }
+    .prio-btn.p-urgent::before { background: var(--danger); }
+    .prio-btn.p-high::before { background: var(--amber); }
+    .prio-btn.p-low::before { background: var(--teal); }
+    .prio-btn.on { color: var(--violet-dark); border-color: var(--violet); background: var(--violet-soft); }
+    .prio-btn.on.p-urgent { color: var(--danger); border-color: var(--danger); background: var(--danger-soft); }
+    .prio-btn.on.p-high { color: #b66516; border-color: var(--amber); background: var(--amber-soft); }
+    .prio-btn.on.p-low { color: var(--teal); border-color: var(--teal); background: var(--teal-soft); }
+    .form-error {
+      display: none;
+      margin: 2px 0 14px;
+      padding: 12px;
+      border: 1px solid #ffd1da;
+      border-radius: 14px;
+      color: #ad2e46;
+      background: var(--danger-soft);
+      font-size: 12px;
+      line-height: 1.55;
+    }
+    .form-error.on { display: block; }
+    .form-error button { display: none; min-height: 36px; margin-top: 9px; padding: 0 12px; border: 0; border-radius: 10px; color: #fff; background: var(--danger); font-size: 11px; font-weight: 850; cursor: pointer; }
+    .form-error button.on { display: block; }
+    .actions { display: grid; gap: 9px; }
+    .save-btn, .delete-btn, .secondary-btn, .danger-btn {
+      width: 100%;
+      min-height: 52px;
+      border: 0;
+      border-radius: 15px;
+      font-size: 14px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+    .save-btn { color: #fff; background: var(--violet); box-shadow: 0 9px 22px rgba(93,61,242,.22); }
+    .save-btn:active { background: var(--violet-dark); }
+    .delete-btn, .danger-btn { color: var(--danger); background: var(--danger-soft); }
+    .secondary-btn { color: var(--ink-2); border: 1px solid var(--line); background: var(--paper); }
+
+    /* Backup */
+    .backup-intro { display: flex; gap: 12px; align-items: center; padding: 14px; margin-bottom: 18px; border-radius: 16px; color: #554878; background: var(--violet-soft); }
+    .backup-intro svg { width: 25px; flex: 0 0 auto; }
+    .backup-intro strong { display: block; font-size: 13px; }
+    .backup-intro span { display: block; margin-top: 3px; font-size: 11px; line-height: 1.45; }
+    .b-actions { display: grid; gap: 9px; }
+    .b-review { display: none; margin-top: 16px; padding: 14px; border: 1px solid var(--line); border-radius: 16px; background: #fbfafc; }
+    .b-review.on { display: block; }
+    .b-review-title { margin-bottom: 10px; font-size: 13px; font-weight: 900; }
+    .b-list { display: grid; gap: 8px; margin-bottom: 13px; }
+    .b-row { display: flex; justify-content: space-between; gap: 12px; color: var(--muted); font-size: 11px; }
+    .b-row strong { max-width: 66%; overflow: hidden; color: var(--ink-2); text-align: right; text-overflow: ellipsis; white-space: nowrap; }
+    .b-status { min-height: 20px; margin-top: 12px; color: var(--muted); font-size: 11px; line-height: 1.5; }
+    .b-status.ok { color: var(--teal); }
+    .b-status.warn { color: #b66516; }
+    .b-status.err { color: var(--danger); }
+
+    .toast {
+      position: fixed;
+      z-index: 900;
+      left: 50%;
+      bottom: calc(88px + env(safe-area-inset-bottom));
+      max-width: calc(100vw - 32px);
+      padding: 11px 15px;
+      border-radius: 12px;
+      color: #fff;
+      background: var(--ink);
+      box-shadow: 0 10px 28px rgba(0,0,0,.25);
+      font-size: 12px;
+      font-weight: 800;
+      opacity: 0;
+      pointer-events: none;
+      transform: translate(-50%, 12px);
+      transition: .2s ease;
+    }
+    .toast.on { opacity: 1; transform: translate(-50%, 0); }
+
+    @media (max-width: 390px) {
+      :root { --hour-h: 68px; }
+      .app-header { padding-left: 11px; padding-right: 11px; }
+      .day-strip { gap: 2px; }
+      .day-btn { border-radius: 13px; }
+      .day-btn .dnum { font-size: 17px; }
+      .main { padding-left: 9px; padding-right: 9px; }
+      .day-stats { gap: 4px; }
+      .stat { min-width: 53px; padding-left: 5px; padding-right: 5px; }
+      .event { padding-left: 8px; padding-right: 5px; }
+      .prio-btn { font-size: 10px; }
+    }
+
     @media print {
-      html,body { height: auto; overflow: visible; }
-      .header { position: static; }
-      .scroll-area { position: static; overflow: visible; }
-      .cell:active { background: var(--white); }
+      .app-header, .fab, .empty-banner { display: none !important; }
+      .main { padding: 0; }
+      .timeline-card { box-shadow: none; }
     }
   </style>
 </head>
 <body>
+  <header class="app-header">
+    <div class="topline">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 6.5h16M7 3.5v6M17 3.5v6M5.5 5h13A1.5 1.5 0 0 1 20 6.5v12a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 18.5v-12A1.5 1.5 0 0 1 5.5 5Z"/><path d="m8 14 2.2 2.2L16 10.5"/></svg>
+        </div>
+        <div class="brand-copy">
+          <div class="brand-name">WEEK FLOW</div>
+          <span class="brand-sub">TIME BLOCKER</span>
+        </div>
+      </div>
+      <button class="icon-btn" type="button" onclick="openBackupSheet()" aria-label="バックアップを開く">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M5 17v2a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-2"/></svg>
+      </button>
+    </div>
+    <div class="week-nav">
+      <button class="week-move" type="button" onclick="changeWeek(-1)" aria-label="前の週">‹</button>
+      <div class="week-title">
+        <strong id="weekLabel"></strong>
+        <button type="button" onclick="goToday()" id="todayBtn">今日に戻る</button>
+      </div>
+      <button class="week-move" type="button" onclick="changeWeek(1)" aria-label="次の週">›</button>
+    </div>
+    <nav class="day-strip" id="dayStrip" aria-label="曜日を選択"></nav>
+  </header>
 
-<!-- Header -->
-<div class="header">
-  <span class="app-title">📅 週間ブロッカー</span>
-  <div class="nav">
-    <button class="nav-btn" onclick="changeWeek(-1)">‹</button>
-    <span class="week-lbl" id="wlbl"></span>
-    <button class="nav-btn" onclick="changeWeek(1)">›</button>
-  </div>
-  <button class="today-btn" onclick="goToday()">今週</button>
-</div>
-
-<!-- Scrollable grid -->
-<div class="scroll-area">
-  <div class="grid" id="grid"></div>
-</div>
-
-<button class="backup-fab" onclick="openBackupSheet()" aria-label="バックアップ">バックアップ</button>
-
-<!-- Bottom Sheet -->
-<div class="sheet-overlay" id="ov">
-  <div class="sheet">
-    <div class="sheet-handle"></div>
-    <div class="s-day" id="sDay"></div>
-    <div class="s-time" id="sTime"></div>
-    <div class="s-time-row">
+  <main class="main">
+    <section class="day-hero" aria-labelledby="dayHeading">
       <div>
-        <label class="s-lbl" for="sStart">開始</label>
-        <select class="s-select" id="sStart"></select>
+        <div class="eyebrow" id="dayEyebrow"></div>
+        <h1 class="day-heading" id="dayHeading"></h1>
       </div>
-      <div>
-        <label class="s-lbl" for="sEnd">終了</label>
-        <select class="s-select" id="sEnd"></select>
+      <div class="day-stats" aria-label="この日の予定サマリー">
+        <div class="stat"><strong id="eventCount">0</strong><span>予定</span></div>
+        <div class="stat"><strong id="plannedTime">0h</strong><span>予定時間</span></div>
       </div>
+    </section>
+
+    <div class="empty-banner" id="emptyBanner">
+      <span aria-hidden="true">✦</span>
+      <span>まだ予定はありません。空いている時間をタップして追加できます。</span>
     </div>
-    <label class="s-lbl">優先度</label>
-    <div class="prio-row" id="sPriority"></div>
-    <label class="s-lbl">タイトル</label>
-    <input class="s-inp" id="sTitle" placeholder="例：会議、勉強、食事…" enterkeyhint="done"/>
-    <label class="s-lbl">メモ・備考</label>
-    <textarea class="s-txt" id="sMemo" placeholder="場所、準備するものなど…"></textarea>
-    <div class="s-acts">
-      <button class="s-save" onclick="saveEv()">保存する</button>
-      <div class="s-row">
-        <button class="s-del" id="sDel" onclick="delEv()" style="display:none">削除</button>
-        <button class="s-cancel" onclick="closeSheet()">閉じる</button>
+
+    <section class="timeline-card" aria-label="1日のタイムライン">
+      <div class="timeline-head"><strong>DAY TIMELINE</strong><span>タップして予定を追加</span></div>
+      <div class="time-rail" id="timeRail" aria-hidden="true"></div>
+      <div class="timeline" id="timeline">
+        <div class="event-layer" id="eventLayer"></div>
+      </div>
+    </section>
+  </main>
+
+  <button class="fab" type="button" onclick="openQuickAdd()">
+    <span class="fab-plus" aria-hidden="true">+</span>
+    <span>予定を追加</span>
+  </button>
+
+  <!-- Schedule editor -->
+  <div class="sheet-overlay" id="eventOverlay" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-top">
+        <div class="sheet-top-copy"><small id="sheetMode">NEW BLOCK</small><strong id="sheetTitle">予定を追加</strong></div>
+        <button class="sheet-close" type="button" onclick="closeEventSheet()" aria-label="閉じる">×</button>
+      </div>
+      <div class="sheet-body">
+        <div class="field">
+          <label class="field-label" for="eventTitle">タイトル <span>必須</span></label>
+          <input class="input" id="eventTitle" maxlength="120" placeholder="例：ジム、レポート、ミーティング" enterkeyhint="next" autocomplete="off">
+        </div>
+        <div class="field">
+          <div class="time-row">
+            <div>
+              <label class="field-label" for="startTime">開始</label>
+              <select class="select" id="startTime"></select>
+            </div>
+            <div class="time-dash">—</div>
+            <div>
+              <label class="field-label" for="endTime">終了</label>
+              <select class="select" id="endTime"></select>
+            </div>
+          </div>
+          <div class="duration-pills" aria-label="所要時間を選択">
+            <button class="quick-btn" type="button" onclick="setDuration(30)">30分</button>
+            <button class="quick-btn" type="button" onclick="setDuration(60)">1時間</button>
+            <button class="quick-btn" type="button" onclick="setDuration(90)">1.5時間</button>
+            <button class="quick-btn" type="button" onclick="setDuration(120)">2時間</button>
+          </div>
+        </div>
+        <div class="field">
+          <div class="field-label">優先度</div>
+          <div class="prio-row" id="priorityRow"></div>
+        </div>
+        <div class="field">
+          <label class="field-label" for="eventMemo">メモ <span>任意</span></label>
+          <textarea class="textarea" id="eventMemo" maxlength="1000" placeholder="場所、URL、持ち物など"></textarea>
+        </div>
+        <div class="form-error" id="formError" role="alert"><span id="formErrorText"></span><button id="nextFreeBtn" type="button" onclick="useSuggestedTime()"></button></div>
+        <div class="actions">
+          <button class="save-btn" type="button" onclick="saveEvent()">この予定を保存</button>
+          <button class="delete-btn" id="deleteBtn" type="button" onclick="deleteEvent()" style="display:none">予定を削除</button>
+        </div>
       </div>
     </div>
   </div>
-</div>
 
-<!-- Backup Sheet -->
-<div class="sheet-overlay" id="backupOv">
-  <div class="sheet backup-sheet">
-    <div class="sheet-handle"></div>
-    <div class="b-title">バックアップ</div>
-    <div class="b-meta" id="bSummary"></div>
-
-    <div class="b-actions">
-      <button class="b-primary" onclick="exportBackup()">バックアップを書き出す</button>
-      <button class="b-secondary" onclick="chooseBackupFile()">バックアップを読み込む</button>
-    </div>
-    <input id="bFile" type="file" accept=".json,application/json" style="display:none" onchange="handleImportFile(this.files[0])">
-
-    <div class="b-review" id="bReview">
-      <div class="b-review-title">読み込み確認</div>
-      <div class="b-list">
-        <div class="b-row"><span>ファイル</span><strong id="bFileName"></strong></div>
-        <div class="b-row"><span>予定</span><strong id="bCount"></strong></div>
-        <div class="b-row"><span>同じ枠</span><strong id="bOverlap"></strong></div>
-        <div class="b-row"><span>出力日時</span><strong id="bExportedAt"></strong></div>
-        <div class="b-row"><span>形式</span><strong id="bSource"></strong></div>
+  <!-- Backup -->
+  <div class="sheet-overlay" id="backupOverlay" role="dialog" aria-modal="true" aria-labelledby="backupTitle">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-top">
+        <div class="sheet-top-copy"><small>DATA CARE</small><strong id="backupTitle">バックアップ</strong></div>
+        <button class="sheet-close" type="button" onclick="closeBackupSheet()" aria-label="閉じる">×</button>
       </div>
-      <div class="b-actions">
-        <button class="b-secondary" onclick="applyPendingImport('merge')">今の予定を保存して追加/上書き</button>
-        <button class="b-danger" onclick="applyPendingImport('replace')">今の予定を保存して置き換え</button>
+      <div class="sheet-body">
+        <div class="backup-intro">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M5 17v2a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-2"/></svg>
+          <div><strong id="backupSummary">現在の予定: 0件</strong><span>機種変更やデータ消去に備えて、JSONファイルとして保存できます。</span></div>
+        </div>
+        <div class="b-actions">
+          <button class="save-btn" type="button" onclick="exportBackup()">バックアップを書き出す</button>
+          <button class="secondary-btn" type="button" onclick="chooseBackupFile()">バックアップを読み込む</button>
+        </div>
+        <input id="backupFile" type="file" accept=".json,application/json" hidden onchange="handleImportFile(this.files[0])">
+        <div class="b-review" id="backupReview">
+          <div class="b-review-title">読み込み内容</div>
+          <div class="b-list">
+            <div class="b-row"><span>ファイル</span><strong id="backupFileName"></strong></div>
+            <div class="b-row"><span>予定</span><strong id="backupCount"></strong></div>
+            <div class="b-row"><span>同じ開始枠</span><strong id="backupOverlap"></strong></div>
+            <div class="b-row"><span>出力日時</span><strong id="backupExportedAt"></strong></div>
+            <div class="b-row"><span>形式</span><strong id="backupSource"></strong></div>
+          </div>
+          <div class="b-actions">
+            <button class="secondary-btn" type="button" onclick="applyPendingImport('merge')">今の予定に追加</button>
+            <button class="danger-btn" type="button" onclick="applyPendingImport('replace')">すべて置き換え</button>
+          </div>
+        </div>
+        <div class="b-status" id="backupStatus" role="status"></div>
       </div>
     </div>
-
-    <div class="b-status" id="bStatus" role="status"></div>
-    <button class="b-close" onclick="closeBackupSheet()">閉じる</button>
   </div>
-</div>
 
-<script>
-const HOURS = Array.from({length:17},(_,i)=>i+6);
-const DAY_START = 6 * 60;
-const DAY_END = 23 * 60;
-const SLOT_MIN = 15;
-const CELL_H = 60;
-const DJP   = ['月','火','水','木','金','土','日'];
-const STORE  = 'tblocker_v2';
-const BACKUP_KIND = 'weekly-time-blocker-mobile-backup';
-const PRIORITY_ORDER = ['urgent','high','normal','low'];
-const PRIORITIES = {
-  urgent: {label:'最優先', cls:'p-urgent'},
-  high: {label:'高', cls:'p-high'},
-  normal: {label:'通常', cls:'p-normal'},
-  low: {label:'低', cls:'p-low'}
-};
+  <div class="toast" id="toast" role="status"></div>
 
-let evs={}, wk=0, curKey=null, curDay=0, pendingImport=null, selectedPriority='normal';
+  <script>
+    const DAY_START = 6 * 60;
+    const DAY_END = 24 * 60;
+    const SLOT_MIN = 15;
+    const HOUR_HEIGHT = () => parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--hour-h')) || 72;
+    const STORE = 'week_flow_v3';
+    const LEGACY_STORE = 'tblocker_v2';
+    const BACKUP_KIND = 'week-flow-mobile-backup';
+    const DAYS = ['月', '火', '水', '木', '金', '土', '日'];
+    const DAY_NAMES = ['月曜日', '火曜日', '水曜日', '木曜日', '金曜日', '土曜日', '日曜日'];
+    const PRIORITY_ORDER = ['urgent', 'high', 'normal', 'low'];
+    const PRIORITIES = {
+      urgent: { label: '重要', cls: 'p-urgent' },
+      high: { label: '高め', cls: 'p-high' },
+      normal: { label: 'ふつう', cls: 'p-normal' },
+      low: { label: '余裕', cls: 'p-low' }
+    };
 
-/* ── Storage ── */
-function load(){
-  try{
-    const raw=JSON.parse(localStorage.getItem(STORE)||'{}');
-    const normalized=normalizeEvents(raw);
-    evs=normalized.events;
-    if(JSON.stringify(raw)!==JSON.stringify(evs)) save();
-  }catch(e){
-    evs={};
-  }
-}
-function save(){ localStorage.setItem(STORE, JSON.stringify(evs)); }
+    let events = {};
+    let weekOffset = 0;
+    let selectedDay = todayDayIndex();
+    let editingKey = null;
+    let editingDate = '';
+    let selectedPriority = 'normal';
+    let pendingImport = null;
+    let suggestedTime = null;
+    let toastTimer = null;
 
-/* ── Date helpers ── */
-function monday(offset){
-  const t=new Date(), dow=t.getDay(), d=dow===0?-6:1-dow, m=new Date(t);
-  m.setDate(t.getDate()+d+offset*7); m.setHours(0,0,0,0); return m;
-}
-function fmt(d){ return `${d.getMonth()+1}/${d.getDate()}`; }
-function isToday(d){ return d.toDateString()===new Date().toDateString(); }
-function makeKey(week,day,startMin){ return `${week}|${day}|${startMin}`; }
-function eKey(d,startMin){ return makeKey(wk,d,startMin); }
-function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function clamp(n,min,max){ return Math.min(max,Math.max(min,n)); }
-function snapMinute(n){ return Math.round(n/SLOT_MIN)*SLOT_MIN; }
-function minToTime(min){
-  const h=Math.floor(min/60), m=min%60;
-  return `${h}:${String(m).padStart(2,'0')}`;
-}
-function durationLabel(start,end){
-  const total=Math.max(SLOT_MIN,end-start), h=Math.floor(total/60), m=total%60;
-  if(h&&m) return `${h}時間${m}分`;
-  if(h) return `${h}時間`;
-  return `${m}分`;
-}
-function normalizePriority(value){
-  return PRIORITY_ORDER.includes(value)?value:'normal';
-}
-function parseEventKey(key){
-  const parts=String(key).split('|');
-  if(parts.length!==3) return null;
-  const week=Number(parts[0]), day=Number(parts[1]), rawSlot=Number(parts[2]);
-  if(!Number.isInteger(week)||Math.abs(week)>10000) return null;
-  if(!Number.isInteger(day)||day<0||day>6) return null;
-  if(!Number.isInteger(rawSlot)) return null;
-  const startMin=rawSlot<60?rawSlot*60:rawSlot;
-  if(startMin<DAY_START||startMin>=DAY_END||startMin%SLOT_MIN!==0) return null;
-  return {week,day,startMin};
-}
-function normalizeEventData(key,ev){
-  const parsed=parseEventKey(key);
-  if(!parsed||!ev||typeof ev!=='object'||Array.isArray(ev)) return null;
-  const title=typeof ev.title==='string'?ev.title.trim():'';
-  const memo=typeof ev.memo==='string'?ev.memo.trim():'';
-  if(!title) return null;
-  const rawStart=Number.isInteger(ev.startMin)?ev.startMin:parsed.startMin;
-  const startMin=clamp(snapMinute(rawStart),DAY_START,DAY_END-SLOT_MIN);
-  const rawEnd=Number.isInteger(ev.endMin)?ev.endMin:startMin+60;
-  const endMin=clamp(snapMinute(rawEnd),startMin+SLOT_MIN,DAY_END);
-  return {
-    key: makeKey(parsed.week,parsed.day,startMin),
-    value: {
-      title: title.slice(0,120),
-      memo: memo.slice(0,1000),
-      startMin,
-      endMin,
-      priority: normalizePriority(ev.priority)
+    /* Utilities */
+    function pad(value) { return String(value).padStart(2, '0'); }
+    function clamp(value, min, max) { return Math.min(max, Math.max(min, value)); }
+    function snapMinute(value) { return Math.round(value / SLOT_MIN) * SLOT_MIN; }
+    function esc(value) { return String(value || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+    function toIso(date) { return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`; }
+    function fromIso(iso) {
+      const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(iso));
+      if (!match) return null;
+      const date = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+      return Number.isNaN(date.getTime()) || toIso(date) !== iso ? null : date;
     }
-  };
-}
-
-/* ── Navigation ── */
-function changeWeek(n){ wk+=n; render(); }
-function goToday(){ wk=0; render(); }
-
-/* ── Sheet ── */
-function buildTimeOptions(){
-  const start=document.getElementById('sStart');
-  const end=document.getElementById('sEnd');
-  start.innerHTML='';
-  end.innerHTML='';
-  for(let min=DAY_START;min<DAY_END;min+=SLOT_MIN){
-    const opt=document.createElement('option');
-    opt.value=String(min);
-    opt.textContent=minToTime(min);
-    start.appendChild(opt);
-  }
-  for(let min=DAY_START+SLOT_MIN;min<=DAY_END;min+=SLOT_MIN){
-    const opt=document.createElement('option');
-    opt.value=String(min);
-    opt.textContent=minToTime(min);
-    end.appendChild(opt);
-  }
-}
-
-function renderPriorityChoices(){
-  const box=document.getElementById('sPriority');
-  box.innerHTML='';
-  PRIORITY_ORDER.forEach(key=>{
-    const btn=document.createElement('button');
-    btn.type='button';
-    btn.className=`prio-btn ${PRIORITIES[key].cls}${selectedPriority===key?' on':''}`;
-    btn.textContent=PRIORITIES[key].label;
-    btn.addEventListener('click',()=>{
-      selectedPriority=key;
-      renderPriorityChoices();
-    });
-    box.appendChild(btn);
-  });
-}
-
-function setSheetTimes(startMin,endMin){
-  const start=document.getElementById('sStart');
-  const end=document.getElementById('sEnd');
-  start.value=String(startMin);
-  end.value=String(endMin);
-  ensureEndAfterStart();
-  updateTimeSummary();
-}
-
-function ensureEndAfterStart(){
-  const start=document.getElementById('sStart');
-  const end=document.getElementById('sEnd');
-  const startMin=Number(start.value);
-  let endMin=Number(end.value);
-  if(!Number.isInteger(startMin)) return;
-  if(!Number.isInteger(endMin)||endMin<=startMin){
-    endMin=Math.min(startMin+60,DAY_END);
-    if(endMin<=startMin) endMin=startMin+SLOT_MIN;
-    end.value=String(endMin);
-  }
-  Array.from(end.options).forEach(opt=>{
-    opt.disabled=Number(opt.value)<=startMin;
-  });
-}
-
-function updateTimeSummary(){
-  const startMin=Number(document.getElementById('sStart').value);
-  const endMin=Number(document.getElementById('sEnd').value);
-  if(!Number.isInteger(startMin)||!Number.isInteger(endMin)) return;
-  document.getElementById('sTime').textContent=`${minToTime(startMin)} 〜 ${minToTime(endMin)}（${durationLabel(startMin,endMin)}）`;
-}
-
-function openSheet(key, dIdx, startMin, date, isEdit){
-  curKey=key;
-  curDay=dIdx;
-  const dn=['月曜日','火曜日','水曜日','木曜日','金曜日','土曜日','日曜日'];
-  document.getElementById('sDay').textContent=`${fmt(date)} (${dn[dIdx]})`;
-  const ev=key?evs[key]:null;
-  const safeStart=clamp(snapMinute(ev?.startMin??startMin),DAY_START,DAY_END-SLOT_MIN);
-  const safeEnd=clamp(snapMinute(ev?.endMin??safeStart+60),safeStart+SLOT_MIN,DAY_END);
-  setSheetTimes(safeStart,safeEnd);
-  selectedPriority=normalizePriority(ev?.priority);
-  renderPriorityChoices();
-  document.getElementById('sTitle').value=ev?.title||'';
-  document.getElementById('sMemo').value=ev?.memo||'';
-  document.getElementById('sDel').style.display=isEdit?'':'none';
-  document.getElementById('ov').classList.add('on');
-  setTimeout(()=>document.getElementById('sTitle').focus(), 80);
-}
-
-function saveEv(){
-  const t=document.getElementById('sTitle').value.trim();
-  if(!t){
-    const inp=document.getElementById('sTitle');
-    inp.style.borderColor='#DC2626';
-    setTimeout(()=>inp.style.borderColor='',1200);
-    inp.focus(); return;
-  }
-  const startMin=Number(document.getElementById('sStart').value);
-  const endMin=Number(document.getElementById('sEnd').value);
-  if(!Number.isInteger(startMin)||!Number.isInteger(endMin)||endMin<=startMin){
-    document.getElementById('sEnd').focus();
-    return;
-  }
-  const newKey=eKey(curDay,startMin);
-  if(newKey!==curKey&&evs[newKey]&&!confirm('同じ開始時刻に予定があります。上書きしますか？')) return;
-  if(curKey&&curKey!==newKey) delete evs[curKey];
-  evs[newKey]={
-    title:t,
-    memo:document.getElementById('sMemo').value.trim(),
-    startMin,
-    endMin,
-    priority:selectedPriority
-  };
-  curKey=newKey;
-  save(); closeSheet(); render();
-}
-
-function delEv(){ if(curKey) delete evs[curKey]; save(); closeSheet(); render(); }
-
-function closeSheet(){
-  document.getElementById('ov').classList.remove('on');
-  curKey=null;
-  // blur to dismiss keyboard
-  document.getElementById('sTitle').blur();
-  document.getElementById('sMemo').blur();
-  document.getElementById('sStart').blur();
-  document.getElementById('sEnd').blur();
-}
-
-/* Close on overlay tap */
-document.getElementById('ov').addEventListener('click', e=>{
-  if(e.target===document.getElementById('ov')) closeSheet();
-});
-
-/* Enter key saves */
-document.getElementById('sTitle').addEventListener('keydown', e=>{
-  if(e.key==='Enter'){ e.preventDefault(); saveEv(); }
-});
-document.getElementById('sStart').addEventListener('change', ()=>{
-  ensureEndAfterStart();
-  updateTimeSummary();
-});
-document.getElementById('sEnd').addEventListener('change', updateTimeSummary);
-
-/* ── Backup ── */
-function countEvents(src=evs){
-  return Object.values(src||{}).filter(ev=>ev&&typeof ev.title==='string'&&ev.title.trim()).length;
-}
-
-function cloneEvents(src){
-  return JSON.parse(JSON.stringify(src||{}));
-}
-
-function localStamp(){
-  const d=new Date(), pad=n=>String(n).padStart(2,'0');
-  return `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}`;
-}
-
-function makeBackup(reason='manual'){
-  return {
-    kind: BACKUP_KIND,
-    version: 2,
-    app: '週間タイムブロッカー',
-    storageKey: STORE,
-    reason,
-    exportedAt: new Date().toISOString(),
-    exportedAtLocal: new Date().toLocaleString('ja-JP'),
-    currentWeekOffset: wk,
-    eventCount: countEvents(),
-    events: cloneEvents(evs)
-  };
-}
-
-function downloadJson(data, filename){
-  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json;charset=utf-8'});
-  const url=URL.createObjectURL(blob);
-  const link=document.createElement('a');
-  link.href=url;
-  link.download=filename;
-  link.style.display='none';
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  setTimeout(()=>URL.revokeObjectURL(url),1000);
-}
-
-function exportBackup(reason='manual'){
-  const prefix=reason==='pre-import'?'tblocker-mobile-safety-backup':'tblocker-mobile-backup';
-  downloadJson(makeBackup(reason),`${prefix}_${localStamp()}.json`);
-  setBackupStatus(`${countEvents()}件のバックアップを書き出しました。`,'ok');
-}
-
-function openBackupSheet(){
-  refreshBackupSummary();
-  resetPendingImport(false);
-  document.getElementById('backupOv').classList.add('on');
-}
-
-function closeBackupSheet(){
-  document.getElementById('backupOv').classList.remove('on');
-}
-
-function refreshBackupSummary(){
-  document.getElementById('bSummary').textContent=`現在の予定: ${countEvents()}件`;
-}
-
-function setBackupStatus(msg,tone=''){
-  const el=document.getElementById('bStatus');
-  el.className=`b-status ${tone}`.trim();
-  el.textContent=msg||'';
-}
-
-function resetPendingImport(keepStatus){
-  pendingImport=null;
-  document.getElementById('bReview').classList.remove('on');
-  document.getElementById('bFile').value='';
-  if(!keepStatus) setBackupStatus('');
-}
-
-function chooseBackupFile(){
-  resetPendingImport(false);
-  document.getElementById('bFile').click();
-}
-
-async function handleImportFile(file){
-  if(!file) return;
-  if(file.size>1024*1024){
-    setBackupStatus('1MB以下のJSONバックアップを選んでください。','err');
-    return;
-  }
-
-  try{
-    const text=await file.text();
-    const parsed=JSON.parse(text);
-    pendingImport=parseBackup(parsed);
-    showImportReview(file.name,pendingImport);
-  }catch(e){
-    setBackupStatus(e&&e.message?e.message:'バックアップを読み込めませんでした。','err');
-  }
-}
-
-function parseBackup(data){
-  if(!data||typeof data!=='object'||Array.isArray(data)){
-    throw new Error('JSONバックアップの形式が正しくありません。');
-  }
-
-  let raw=data, source='旧形式JSON', exportedAt='不明';
-  if(data.events&&typeof data.events==='object'&&!Array.isArray(data.events)){
-    raw=data.events;
-    source=data.kind===BACKUP_KIND?'公式バックアップ':'events形式JSON';
-    exportedAt=data.exportedAtLocal||formatIsoDate(data.exportedAt)||'不明';
-  }
-
-  const normalized=normalizeEvents(raw);
-  if(!normalized.count){
-    throw new Error('取り込める予定が見つかりませんでした。');
-  }
-
-  return {
-    events: normalized.events,
-    count: normalized.count,
-    skipped: normalized.skipped,
-    source,
-    exportedAt
-  };
-}
-
-function formatIsoDate(value){
-  if(!value) return '';
-  const d=new Date(value);
-  return Number.isNaN(d.getTime())?'':d.toLocaleString('ja-JP');
-}
-
-function normalizeEvents(raw){
-  const out={};
-  let skipped=0;
-  const keys=Object.keys(raw||{});
-  if(keys.length>5000) throw new Error('予定が多すぎます。5000件以下のバックアップを使ってください。');
-
-  keys.forEach(key=>{
-    const normalized=normalizeEventData(key,raw[key]);
-    if(!normalized){
-      skipped++;
-      return;
+    function addDays(date, days) { const next = new Date(date); next.setDate(next.getDate() + days); return next; }
+    function startOfWeek(offset = 0) {
+      const now = new Date();
+      const day = now.getDay();
+      const mondayDistance = day === 0 ? -6 : 1 - day;
+      const monday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      monday.setDate(monday.getDate() + mondayDistance + offset * 7);
+      return monday;
     }
-    out[normalized.key]=normalized.value;
-  });
+    function selectedDate() { return addDays(startOfWeek(weekOffset), selectedDay); }
+    function todayDayIndex() { const day = new Date().getDay(); return day === 0 ? 6 : day - 1; }
+    function isToday(date) { return toIso(date) === toIso(new Date()); }
+    function minToTime(minute) {
+      if (minute === 24 * 60) return '24:00';
+      return `${pad(Math.floor(minute / 60))}:${pad(minute % 60)}`;
+    }
+    function durationText(totalMinutes) {
+      const minutes = Math.max(0, totalMinutes);
+      const hours = Math.floor(minutes / 60);
+      const rest = minutes % 60;
+      if (hours && rest) return `${hours}h${rest}m`;
+      if (hours) return `${hours}h`;
+      return `${rest}m`;
+    }
+    function makeKey(dateIso, startMin) { return `${dateIso}|${startMin}`; }
+    function normalizePriority(value) { return PRIORITY_ORDER.includes(value) ? value : 'normal'; }
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.classList.add('on');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove('on'), 2200);
+    }
 
-  return {events:out, count:Object.keys(out).length, skipped};
-}
-
-function isValidEventKey(key){
-  return !!parseEventKey(key);
-}
-
-function showImportReview(name,data){
-  const overlap=Object.keys(data.events).filter(key=>evs[key]).length;
-  document.getElementById('bFileName').textContent=name;
-  document.getElementById('bCount').textContent=`${data.count}件`;
-  document.getElementById('bOverlap').textContent=overlap?`${overlap}件を上書き`:'なし';
-  document.getElementById('bExportedAt').textContent=data.exportedAt;
-  document.getElementById('bSource').textContent=data.skipped?`${data.source} / ${data.skipped}件除外`:data.source;
-  document.getElementById('bReview').classList.add('on');
-  setBackupStatus('内容を確認して取り込み方法を選んでください。','warn');
-}
-
-function applyPendingImport(mode){
-  if(!pendingImport){
-    setBackupStatus('先にバックアップファイルを選んでください。','err');
-    return;
-  }
-
-  const importedCount=pendingImport.count;
-  if(mode==='replace'){
-    const ok=confirm('現在の予定をすべて置き換えます。先に現在の予定をバックアップとして保存します。続けますか？');
-    if(!ok) return;
-    exportBackup('pre-import');
-    evs=cloneEvents(pendingImport.events);
-  }else{
-    const overlap=Object.keys(pendingImport.events).filter(key=>evs[key]).length;
-    const ok=confirm(`${pendingImport.count}件を追加します。${overlap}件の同じ枠は上書きされます。先に現在の予定をバックアップとして保存します。続けますか？`);
-    if(!ok) return;
-    exportBackup('pre-import');
-    evs=Object.assign({},evs,pendingImport.events);
-  }
-
-  save();
-  render();
-  refreshBackupSummary();
-  const done=mode==='replace'?'置き換え':'追加/上書き';
-  resetPendingImport(true);
-  setBackupStatus(`${importedCount}件を${done}しました。`,'ok');
-}
-
-document.getElementById('backupOv').addEventListener('click', e=>{
-  if(e.target===document.getElementById('backupOv')) closeBackupSheet();
-});
-
-/* ── Render ── */
-function render(){
-  const m=monday(wk);
-  const s=new Date(m); s.setDate(m.getDate()+6);
-  const mm=m.getMonth()+1, sm=s.getMonth()+1;
-  document.getElementById('wlbl').textContent=
-    mm===sm
-      ? `${mm}月${m.getDate()}〜${s.getDate()}日`
-      : `${mm}/${m.getDate()} 〜 ${sm}/${s.getDate()}`;
-
-  const g=document.getElementById('grid');
-  g.innerHTML='';
-  const weekEvents=Object.entries(evs)
-    .map(([key,ev])=>({key,ev,meta:parseEventKey(key)}))
-    .filter(item=>item.meta&&item.meta.week===wk)
-    .sort((a,b)=>a.meta.day-b.meta.day||a.ev.startMin-b.ev.startMin||a.ev.endMin-b.ev.endMin);
-
-  // Corner
-  const co=document.createElement('div'); co.className='dh-corner'; g.appendChild(co);
-
-  // Day headers
-  for(let d=0;d<7;d++){
-    const dt=new Date(m); dt.setDate(m.getDate()+d);
-    const c=document.createElement('div'); c.className='dh';
-    if(isToday(dt)) c.classList.add('today');
-    if(d===5) c.classList.add('sat');
-    if(d===6) c.classList.add('sun');
-    c.innerHTML=`<div class="dname">${DJP[d]}</div><div class="dnum">${dt.getDate()}</div>`;
-    g.appendChild(c);
-  }
-
-  // Hour rows
-  HOURS.forEach(h=>{
-    const hourStart=h*60;
-    const tl=document.createElement('div'); tl.className='tlbl';
-    tl.textContent=`${h}:00`; g.appendChild(tl);
-
-    for(let d=0;d<7;d++){
-      const dt=new Date(m); dt.setDate(m.getDate()+d);
-      const cell=document.createElement('div'); cell.className='cell';
-      if(d===5) cell.classList.add('sat');
-      if(d===6) cell.classList.add('sun');
-      cell.addEventListener('click',()=>openSheet(null,d,hourStart,dt,false));
-
-      weekEvents
-        .filter(item=>item.meta.day===d&&item.ev.startMin>=hourStart&&item.ev.startMin<hourStart+60)
-        .forEach(item=>{
-        const {key,ev}=item;
-        const priority=normalizePriority(ev.priority);
-        const duration=Math.max(SLOT_MIN,ev.endMin-ev.startMin);
-        const top=3+((ev.startMin-hourStart)/60)*CELL_H;
-        const height=Math.max(26,(duration/60)*CELL_H-6);
-        cell.classList.add('has-ev');
-        const bl=document.createElement('div'); bl.className='ev';
-        bl.classList.add(PRIORITIES[priority].cls);
-        if(duration<45) bl.classList.add('compact');
-        bl.style.top=`${top}px`;
-        bl.style.height=`${height}px`;
-        bl.innerHTML=`<div class="ev-time">${minToTime(ev.startMin)}〜${minToTime(ev.endMin)} / ${PRIORITIES[priority].label}</div><div class="ev-title">${esc(ev.title)}</div>${ev.memo?`<div class="ev-memo">${esc(ev.memo)}</div>`:''}`;
-        bl.addEventListener('click',e=>{
-          e.stopPropagation();
-          openSheet(key,d,ev.startMin,dt,true);
-        });
-        cell.appendChild(bl);
+    /* Storage and migration */
+    function parseEventKey(key) {
+      const absolute = /^(\d{4}-\d{2}-\d{2})\|(\d+)$/.exec(String(key));
+      if (absolute) {
+        const startMin = Number(absolute[2]);
+        if (!fromIso(absolute[1]) || !Number.isInteger(startMin) || startMin < DAY_START || startMin >= DAY_END || startMin % SLOT_MIN) return null;
+        return { date: absolute[1], startMin, legacy: false };
+      }
+      const legacy = /^(-?\d+)\|(\d)\|(\d+)$/.exec(String(key));
+      if (!legacy) return null;
+      const offset = Number(legacy[1]);
+      const day = Number(legacy[2]);
+      let startMin = Number(legacy[3]);
+      if (startMin < 60) startMin *= 60;
+      if (!Number.isInteger(offset) || Math.abs(offset) > 10000 || day < 0 || day > 6 || startMin < DAY_START || startMin >= DAY_END || startMin % SLOT_MIN) return null;
+      return { date: toIso(addDays(startOfWeek(offset), day)), startMin, legacy: true };
+    }
+    function normalizeEvent(key, event) {
+      const meta = parseEventKey(key);
+      if (!meta || !event || typeof event !== 'object' || Array.isArray(event)) return null;
+      const title = typeof event.title === 'string' ? event.title.trim() : '';
+      if (!title) return null;
+      const memo = typeof event.memo === 'string' ? event.memo.trim() : '';
+      const rawStart = Number.isInteger(event.startMin) ? event.startMin : meta.startMin;
+      const startMin = clamp(snapMinute(rawStart), DAY_START, DAY_END - SLOT_MIN);
+      const rawEnd = Number.isInteger(event.endMin) ? event.endMin : startMin + 60;
+      const endMin = clamp(snapMinute(rawEnd), startMin + SLOT_MIN, DAY_END);
+      return {
+        key: makeKey(meta.date, startMin),
+        value: { title: title.slice(0, 120), memo: memo.slice(0, 1000), startMin, endMin, priority: normalizePriority(event.priority) },
+        legacy: meta.legacy
+      };
+    }
+    function normalizeEvents(raw) {
+      const output = {};
+      let skipped = 0;
+      let migrated = 0;
+      const keys = Object.keys(raw || {});
+      if (keys.length > 5000) throw new Error('予定が多すぎます。5000件以下のバックアップを使ってください。');
+      keys.forEach(key => {
+        const normalized = normalizeEvent(key, raw[key]);
+        if (!normalized) { skipped += 1; return; }
+        output[normalized.key] = normalized.value;
+        if (normalized.legacy) migrated += 1;
       });
-      g.appendChild(cell);
+      return { events: output, count: Object.keys(output).length, skipped, migrated };
     }
-  });
-}
+    function loadEvents() {
+      try {
+        const current = localStorage.getItem(STORE);
+        const legacy = localStorage.getItem(LEGACY_STORE);
+        const raw = JSON.parse(current || legacy || '{}');
+        const normalized = normalizeEvents(raw);
+        events = normalized.events;
+        if (!current || normalized.skipped || normalized.migrated) persistEvents();
+        if (!current && legacy && normalized.count) setTimeout(() => showToast(`${normalized.count}件の予定を新しい形式へ移行しました`), 500);
+      } catch (error) {
+        events = {};
+      }
+    }
+    function persistEvents() { localStorage.setItem(STORE, JSON.stringify(events)); }
 
-function registerServiceWorker(){
-  if(!('serviceWorker' in navigator)) return;
-  if(!['http:','https:'].includes(location.protocol)) return;
-  window.addEventListener('load', ()=>{
-    navigator.serviceWorker.register('./sw.js', {scope:'./'})
-      .then(()=>navigator.serviceWorker.ready)
-      .then(()=>{ document.documentElement.dataset.offlineReady='true'; })
-      .catch(()=>{ document.documentElement.dataset.offlineReady='false'; });
-  });
-}
+    /* Navigation */
+    function changeWeek(delta) { weekOffset += delta; render(); scrollPageToTop(); }
+    function goToday() { weekOffset = 0; selectedDay = todayDayIndex(); render(); scrollToRelevantTime(); }
+    function selectDay(day) { selectedDay = day; render(); scrollPageToTop(); }
+    function scrollPageToTop() { requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'smooth' })); }
 
-buildTimeOptions();
-load(); render();
-registerServiceWorker();
-</script>
+    /* Event editor */
+    function buildTimeOptions() {
+      const start = document.getElementById('startTime');
+      const end = document.getElementById('endTime');
+      for (let minute = DAY_START; minute < DAY_END; minute += SLOT_MIN) start.add(new Option(minToTime(minute), minute));
+      for (let minute = DAY_START + SLOT_MIN; minute <= DAY_END; minute += SLOT_MIN) end.add(new Option(minToTime(minute), minute));
+    }
+    function renderPriorities() {
+      const row = document.getElementById('priorityRow');
+      row.innerHTML = '';
+      PRIORITY_ORDER.forEach(key => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = `prio-btn ${PRIORITIES[key].cls}${selectedPriority === key ? ' on' : ''}`;
+        button.textContent = PRIORITIES[key].label;
+        button.addEventListener('click', () => { selectedPriority = key; renderPriorities(); });
+        row.appendChild(button);
+      });
+    }
+    function openEventSheet(key, dateIso, startMin) {
+      editingKey = key || null;
+      editingDate = dateIso;
+      const event = key ? events[key] : null;
+      const start = clamp(snapMinute(event ? event.startMin : startMin), DAY_START, DAY_END - SLOT_MIN);
+      const end = clamp(event ? event.endMin : start + 60, start + SLOT_MIN, DAY_END);
+      const date = fromIso(dateIso);
+      selectedPriority = normalizePriority(event && event.priority);
+      document.getElementById('sheetMode').textContent = event ? 'EDIT BLOCK' : 'NEW BLOCK';
+      document.getElementById('sheetTitle').textContent = `${date.getMonth() + 1}月${date.getDate()}日 ${DAY_NAMES[(date.getDay() + 6) % 7]}`;
+      document.getElementById('eventTitle').value = event ? event.title : '';
+      document.getElementById('eventMemo').value = event ? event.memo : '';
+      document.getElementById('startTime').value = String(start);
+      document.getElementById('endTime').value = String(end);
+      document.getElementById('deleteBtn').style.display = event ? '' : 'none';
+      renderPriorities();
+      ensureValidEnd();
+      clearFormError();
+      document.getElementById('eventOverlay').classList.add('on');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeEventSheet() {
+      document.getElementById('eventOverlay').classList.remove('on');
+      document.body.style.overflow = '';
+      document.activeElement && document.activeElement.blur();
+      editingKey = null;
+      suggestedTime = null;
+      clearFormError();
+    }
+    function openQuickAdd() {
+      const date = selectedDate();
+      let start = 9 * 60;
+      if (isToday(date)) {
+        const now = new Date();
+        start = clamp(Math.ceil((now.getHours() * 60 + now.getMinutes()) / SLOT_MIN) * SLOT_MIN, DAY_START, DAY_END - 60);
+      }
+      const free = findNextFreeSlot(toIso(date), start, 60, null);
+      openEventSheet(null, toIso(date), free ? free.startMin : start);
+    }
+    function ensureValidEnd() {
+      const startSelect = document.getElementById('startTime');
+      const endSelect = document.getElementById('endTime');
+      const start = Number(startSelect.value);
+      let end = Number(endSelect.value);
+      Array.from(endSelect.options).forEach(option => { option.disabled = Number(option.value) <= start; });
+      if (!Number.isInteger(end) || end <= start) {
+        end = Math.min(start + 60, DAY_END);
+        endSelect.value = String(end);
+      }
+      clearFormError();
+    }
+    function setDuration(minutes) {
+      const start = Number(document.getElementById('startTime').value);
+      document.getElementById('endTime').value = String(Math.min(start + minutes, DAY_END));
+      ensureValidEnd();
+    }
+    function dayEvents(dateIso, source = events) {
+      return Object.entries(source)
+        .map(([key, event]) => ({ key, event, meta: parseEventKey(key) }))
+        .filter(item => item.meta && item.meta.date === dateIso)
+        .sort((a, b) => a.event.startMin - b.event.startMin || a.event.endMin - b.event.endMin || a.event.title.localeCompare(b.event.title, 'ja'));
+    }
+    function findConflict(dateIso, startMin, endMin, excludeKey = null, source = events) {
+      return dayEvents(dateIso, source).find(item => item.key !== excludeKey && startMin < item.event.endMin && endMin > item.event.startMin) || null;
+    }
+    function findNextFreeSlot(dateIso, fromMinute, duration, excludeKey, source = events) {
+      const safeDuration = Math.max(SLOT_MIN, Math.min(duration, DAY_END - DAY_START));
+      for (let start = clamp(snapMinute(fromMinute), DAY_START, DAY_END - safeDuration); start + safeDuration <= DAY_END; start += SLOT_MIN) {
+        if (!findConflict(dateIso, start, start + safeDuration, excludeKey, source)) return { startMin: start, endMin: start + safeDuration };
+      }
+      for (let start = DAY_START; start < Math.min(fromMinute, DAY_END - safeDuration); start += SLOT_MIN) {
+        if (!findConflict(dateIso, start, start + safeDuration, excludeKey, source)) return { startMin: start, endMin: start + safeDuration };
+      }
+      return null;
+    }
+    function showFormError(message, suggestion = null) {
+      suggestedTime = suggestion;
+      document.getElementById('formErrorText').textContent = message;
+      const button = document.getElementById('nextFreeBtn');
+      button.classList.toggle('on', !!suggestion);
+      button.textContent = suggestion ? `${minToTime(suggestion.startMin)}〜${minToTime(suggestion.endMin)} に移動` : '';
+      document.getElementById('formError').classList.add('on');
+    }
+    function clearFormError() {
+      suggestedTime = null;
+      document.getElementById('formError').classList.remove('on');
+      document.getElementById('nextFreeBtn').classList.remove('on');
+    }
+    function useSuggestedTime() {
+      if (!suggestedTime) return;
+      document.getElementById('startTime').value = String(suggestedTime.startMin);
+      document.getElementById('endTime').value = String(suggestedTime.endMin);
+      ensureValidEnd();
+    }
+    function saveEvent() {
+      const titleInput = document.getElementById('eventTitle');
+      const title = titleInput.value.trim();
+      if (!title) {
+        showFormError('タイトルを入力してください。');
+        titleInput.focus();
+        return;
+      }
+      const startMin = Number(document.getElementById('startTime').value);
+      const endMin = Number(document.getElementById('endTime').value);
+      if (!Number.isInteger(startMin) || !Number.isInteger(endMin) || endMin <= startMin) {
+        showFormError('終了時刻は開始時刻より後にしてください。');
+        return;
+      }
+      const conflict = findConflict(editingDate, startMin, endMin, editingKey);
+      if (conflict) {
+        const duration = endMin - startMin;
+        const suggestion = findNextFreeSlot(editingDate, conflict.event.endMin, duration, editingKey);
+        showFormError(`「${conflict.event.title}」（${minToTime(conflict.event.startMin)}〜${minToTime(conflict.event.endMin)}）と重なっています。`, suggestion);
+        return;
+      }
+      const wasEditing = !!editingKey;
+      const newKey = makeKey(editingDate, startMin);
+      if (editingKey && editingKey !== newKey) delete events[editingKey];
+      events[newKey] = {
+        title,
+        memo: document.getElementById('eventMemo').value.trim(),
+        startMin,
+        endMin,
+        priority: selectedPriority
+      };
+      persistEvents();
+      closeEventSheet();
+      render();
+      showToast(wasEditing ? '予定を更新しました' : '予定を追加しました');
+    }
+    function deleteEvent() {
+      if (!editingKey || !events[editingKey]) return;
+      if (!confirm(`「${events[editingKey].title}」を削除しますか？`)) return;
+      delete events[editingKey];
+      persistEvents();
+      closeEventSheet();
+      render();
+      showToast('予定を削除しました');
+    }
+
+    /* Rendering */
+    function render() {
+      const monday = startOfWeek(weekOffset);
+      const sunday = addDays(monday, 6);
+      const sameMonth = monday.getMonth() === sunday.getMonth();
+      document.getElementById('weekLabel').textContent = sameMonth
+        ? `${monday.getFullYear()}年 ${monday.getMonth() + 1}月${monday.getDate()}日 — ${sunday.getDate()}日`
+        : `${monday.getMonth() + 1}月${monday.getDate()}日 — ${sunday.getMonth() + 1}月${sunday.getDate()}日`;
+      document.getElementById('todayBtn').style.visibility = weekOffset === 0 && selectedDay === todayDayIndex() ? 'hidden' : 'visible';
+      renderDayStrip(monday);
+      renderDayHeader();
+      renderTimeline();
+    }
+    function renderDayStrip(monday) {
+      const strip = document.getElementById('dayStrip');
+      strip.innerHTML = '';
+      DAYS.forEach((dayName, index) => {
+        const date = addDays(monday, index);
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = `day-btn${index === selectedDay ? ' selected' : ''}${isToday(date) ? ' today' : ''}`;
+        button.setAttribute('aria-label', `${date.getMonth() + 1}月${date.getDate()}日 ${DAY_NAMES[index]}`);
+        button.setAttribute('aria-current', index === selectedDay ? 'date' : 'false');
+        button.innerHTML = `<span class="dow">${dayName}</span><span class="dnum">${date.getDate()}</span>`;
+        button.addEventListener('click', () => selectDay(index));
+        strip.appendChild(button);
+      });
+    }
+    function renderDayHeader() {
+      const date = selectedDate();
+      const dateIso = toIso(date);
+      const items = dayEvents(dateIso);
+      const total = items.reduce((sum, item) => sum + item.event.endMin - item.event.startMin, 0);
+      document.getElementById('dayEyebrow').textContent = isToday(date) ? 'TODAY / FOCUS' : `${date.getFullYear()} / ${pad(date.getMonth() + 1)} / ${pad(date.getDate())}`;
+      document.getElementById('dayHeading').innerHTML = `${date.getMonth() + 1}月${date.getDate()}日 <span>${DAY_NAMES[selectedDay]}</span>`;
+      document.getElementById('eventCount').textContent = items.length;
+      document.getElementById('plannedTime').textContent = durationText(total);
+      document.getElementById('emptyBanner').classList.toggle('on', items.length === 0);
+    }
+    function buildOverlapLayout(items) {
+      const result = new Map();
+      let group = [];
+      let groupEnd = -1;
+      function flush() {
+        if (!group.length) return;
+        const laneEnds = [];
+        group.forEach(item => {
+          let lane = laneEnds.findIndex(end => end <= item.event.startMin);
+          if (lane === -1) { lane = laneEnds.length; laneEnds.push(item.event.endMin); }
+          else laneEnds[lane] = item.event.endMin;
+          item._lane = lane;
+        });
+        const lanes = laneEnds.length;
+        group.forEach(item => result.set(item.key, { lane: item._lane, lanes, overlaps: lanes > 1 }));
+        group = [];
+        groupEnd = -1;
+      }
+      items.forEach(item => {
+        if (group.length && item.event.startMin >= groupEnd) flush();
+        group.push(item);
+        groupEnd = Math.max(groupEnd, item.event.endMin);
+      });
+      flush();
+      return result;
+    }
+    function renderTimeline() {
+      const rail = document.getElementById('timeRail');
+      const layer = document.getElementById('eventLayer');
+      const timeline = document.getElementById('timeline');
+      const hourHeight = HOUR_HEIGHT();
+      const dateIso = toIso(selectedDate());
+      const items = dayEvents(dateIso);
+      const layout = buildOverlapLayout(items);
+      rail.innerHTML = '';
+      layer.innerHTML = '';
+      for (let hour = DAY_START / 60; hour <= DAY_END / 60; hour += 1) {
+        const label = document.createElement('div');
+        label.className = 'time-label';
+        label.style.top = `${(hour * 60 - DAY_START) / 60 * hourHeight}px`;
+        label.textContent = minToTime(hour * 60);
+        rail.appendChild(label);
+      }
+      items.forEach(item => {
+        const event = item.event;
+        const position = layout.get(item.key);
+        const duration = event.endMin - event.startMin;
+        const top = (event.startMin - DAY_START) / 60 * hourHeight + 2;
+        const height = Math.max(30, duration / 60 * hourHeight - 4);
+        const gap = position.lanes > 1 ? 3 : 8;
+        const laneWidth = 100 / position.lanes;
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = `event ${PRIORITIES[normalizePriority(event.priority)].cls}${duration <= 30 ? ' compact' : ''}${duration <= 15 ? ' tiny' : ''}${position.overlaps ? ' overlap' : ''}`;
+        button.style.top = `${top}px`;
+        button.style.height = `${height}px`;
+        button.style.left = `calc(${position.lane * laneWidth}% + ${gap}px)`;
+        button.style.width = `calc(${laneWidth}% - ${gap + 5}px)`;
+        button.setAttribute('aria-label', `${event.title} ${minToTime(event.startMin)}から${minToTime(event.endMin)}`);
+        button.innerHTML = `<span class="ev-time">${minToTime(event.startMin)} — ${minToTime(event.endMin)}${position.overlaps ? ' ・ 重複' : ''}</span><span class="ev-title">${esc(event.title)}</span>${event.memo ? `<span class="ev-memo">${esc(event.memo)}</span>` : ''}`;
+        button.addEventListener('click', click => { click.stopPropagation(); openEventSheet(item.key, dateIso, event.startMin); });
+        layer.appendChild(button);
+      });
+      if (isToday(selectedDate())) {
+        const now = new Date();
+        const minute = now.getHours() * 60 + now.getMinutes();
+        if (minute >= DAY_START && minute <= DAY_END) {
+          const line = document.createElement('div');
+          line.className = 'now-line';
+          line.style.top = `${(minute - DAY_START) / 60 * hourHeight}px`;
+          layer.appendChild(line);
+        }
+      }
+      timeline.onclick = event => {
+        if (event.target !== timeline && event.target !== layer) return;
+        const rect = timeline.getBoundingClientRect();
+        const y = event.clientY - rect.top;
+        const minute = clamp(snapMinute(DAY_START + y / hourHeight * 60), DAY_START, DAY_END - SLOT_MIN);
+        openEventSheet(null, dateIso, minute);
+      };
+    }
+    function scrollToRelevantTime() {
+      requestAnimationFrame(() => {
+        const dateIso = toIso(selectedDate());
+        const first = dayEvents(dateIso)[0];
+        let minute = first ? first.event.startMin : 9 * 60;
+        if (isToday(selectedDate())) {
+          const now = new Date();
+          minute = clamp(now.getHours() * 60 + now.getMinutes() - 60, DAY_START, DAY_END);
+        }
+        const card = document.querySelector('.timeline-card');
+        const target = card.offsetTop + 48 + (minute - DAY_START) / 60 * HOUR_HEIGHT();
+        window.scrollTo({ top: Math.max(0, target - 220), behavior: 'smooth' });
+      });
+    }
+
+    /* Backup */
+    function countEvents(source = events) { return Object.keys(source || {}).length; }
+    function cloneEvents(source) { return JSON.parse(JSON.stringify(source || {})); }
+    function localStamp() {
+      const now = new Date();
+      return `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}`;
+    }
+    function makeBackup(reason = 'manual') {
+      return {
+        kind: BACKUP_KIND,
+        version: 3,
+        app: 'WEEK FLOW',
+        reason,
+        exportedAt: new Date().toISOString(),
+        exportedAtLocal: new Date().toLocaleString('ja-JP'),
+        eventCount: countEvents(),
+        events: cloneEvents(events)
+      };
+    }
+    function downloadJson(data, filename) {
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+    function exportBackup(reason = 'manual') {
+      const prefix = reason === 'pre-import' ? 'week-flow-safety-backup' : 'week-flow-backup';
+      downloadJson(makeBackup(reason), `${prefix}_${localStamp()}.json`);
+      setBackupStatus(`${countEvents()}件のバックアップを書き出しました。`, 'ok');
+    }
+    function openBackupSheet() {
+      resetPendingImport(false);
+      document.getElementById('backupSummary').textContent = `現在の予定: ${countEvents()}件`;
+      document.getElementById('backupOverlay').classList.add('on');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeBackupSheet() {
+      document.getElementById('backupOverlay').classList.remove('on');
+      document.body.style.overflow = '';
+    }
+    function setBackupStatus(message, tone = '') {
+      const status = document.getElementById('backupStatus');
+      status.className = `b-status ${tone}`.trim();
+      status.textContent = message || '';
+    }
+    function resetPendingImport(keepStatus) {
+      pendingImport = null;
+      document.getElementById('backupReview').classList.remove('on');
+      document.getElementById('backupFile').value = '';
+      if (!keepStatus) setBackupStatus('');
+    }
+    function chooseBackupFile() { resetPendingImport(false); document.getElementById('backupFile').click(); }
+    async function handleImportFile(file) {
+      if (!file) return;
+      if (file.size > 1024 * 1024) { setBackupStatus('1MB以下のJSONファイルを選んでください。', 'err'); return; }
+      try {
+        const data = JSON.parse(await file.text());
+        pendingImport = parseBackup(data);
+        showImportReview(file.name, pendingImport);
+      } catch (error) {
+        setBackupStatus(error && error.message ? error.message : 'バックアップを読み込めませんでした。', 'err');
+      }
+    }
+    function parseBackup(data) {
+      if (!data || typeof data !== 'object' || Array.isArray(data)) throw new Error('JSONバックアップの形式が正しくありません。');
+      let raw = data;
+      let source = '旧形式JSON';
+      let exportedAt = '不明';
+      if (data.events && typeof data.events === 'object' && !Array.isArray(data.events)) {
+        raw = data.events;
+        source = data.kind === BACKUP_KIND ? 'WEEK FLOW' : 'events形式JSON';
+        exportedAt = data.exportedAtLocal || formatIsoDate(data.exportedAt) || '不明';
+      }
+      const normalized = normalizeEvents(raw);
+      if (!normalized.count) throw new Error('取り込める予定が見つかりませんでした。');
+      return { ...normalized, source, exportedAt };
+    }
+    function formatIsoDate(value) {
+      const date = value ? new Date(value) : null;
+      return !date || Number.isNaN(date.getTime()) ? '' : date.toLocaleString('ja-JP');
+    }
+    function showImportReview(name, data) {
+      const sameStarts = Object.keys(data.events).filter(key => events[key]).length;
+      document.getElementById('backupFileName').textContent = name;
+      document.getElementById('backupCount').textContent = `${data.count}件`;
+      document.getElementById('backupOverlap').textContent = sameStarts ? `${sameStarts}件` : 'なし';
+      document.getElementById('backupExportedAt').textContent = data.exportedAt;
+      document.getElementById('backupSource').textContent = data.skipped ? `${data.source} / ${data.skipped}件除外` : data.source;
+      document.getElementById('backupReview').classList.add('on');
+      setBackupStatus('内容を確認して取り込み方法を選んでください。', 'warn');
+    }
+    function mergeWithoutOverlaps(base, incoming, replaceMode) {
+      const output = replaceMode ? {} : cloneEvents(base);
+      let skipped = 0;
+      const sorted = Object.entries(incoming).sort((a, b) => {
+        const metaA = parseEventKey(a[0]);
+        const metaB = parseEventKey(b[0]);
+        return metaA.date.localeCompare(metaB.date) || a[1].startMin - b[1].startMin || a[1].endMin - b[1].endMin;
+      });
+      sorted.forEach(([key, event]) => {
+        const meta = parseEventKey(key);
+        const previous = output[key];
+        if (previous) delete output[key];
+        if (findConflict(meta.date, event.startMin, event.endMin, null, output)) {
+          if (previous) output[key] = previous;
+          skipped += 1;
+          return;
+        }
+        output[key] = event;
+      });
+      return { events: output, skipped };
+    }
+    function applyPendingImport(mode) {
+      if (!pendingImport) { setBackupStatus('先にバックアップファイルを選んでください。', 'err'); return; }
+      const replacing = mode === 'replace';
+      const message = replacing
+        ? '現在の予定をすべて置き換えます。安全用バックアップを書き出してから続けますか？'
+        : '現在の予定に追加します。同じ開始枠は読み込み側の予定で更新します。続けますか？';
+      if (!confirm(message)) return;
+      const importedCount = pendingImport.count;
+      exportBackup('pre-import');
+      const merged = mergeWithoutOverlaps(events, pendingImport.events, replacing);
+      events = merged.events;
+      persistEvents();
+      render();
+      document.getElementById('backupSummary').textContent = `現在の予定: ${countEvents()}件`;
+      resetPendingImport(true);
+      setBackupStatus(`${importedCount}件を読み込みました。${merged.skipped ? `重複する${merged.skipped}件は除外しました。` : ''}`, merged.skipped ? 'warn' : 'ok');
+    }
+
+    document.getElementById('startTime').addEventListener('change', ensureValidEnd);
+    document.getElementById('endTime').addEventListener('change', clearFormError);
+    document.getElementById('eventTitle').addEventListener('input', clearFormError);
+    document.getElementById('eventTitle').addEventListener('keydown', event => {
+      if (event.key === 'Enter') { event.preventDefault(); document.getElementById('eventMemo').focus(); }
+    });
+    document.getElementById('eventOverlay').addEventListener('click', event => { if (event.target.id === 'eventOverlay') closeEventSheet(); });
+    document.getElementById('backupOverlay').addEventListener('click', event => { if (event.target.id === 'backupOverlay') closeBackupSheet(); });
+    document.addEventListener('keydown', event => {
+      if (event.key !== 'Escape') return;
+      if (document.getElementById('eventOverlay').classList.contains('on')) closeEventSheet();
+      else if (document.getElementById('backupOverlay').classList.contains('on')) closeBackupSheet();
+    });
+
+    buildTimeOptions();
+    loadEvents();
+    render();
+    setTimeout(scrollToRelevantTime, 180);
+  </script>
 </body>
 </html>
