@@ -419,8 +419,12 @@
       line-height: 1.55;
     }
     .form-error.on { display: block; }
-    .form-error button { display: none; min-height: 36px; margin-top: 9px; padding: 0 12px; border: 0; border-radius: 10px; color: #fff; background: var(--danger); font-size: 11px; font-weight: 850; cursor: pointer; }
-    .form-error button.on { display: block; }
+    .time-input {
+      padding: 0 14px;
+      font-variant-numeric: tabular-nums;
+      color-scheme: light;
+    }
+    .time-input::-webkit-calendar-picker-indicator { opacity: .55; }
     .actions { display: grid; gap: 9px; }
     .save-btn, .delete-btn, .secondary-btn, .danger-btn {
       width: 100%;
@@ -568,12 +572,12 @@
           <div class="time-row">
             <div>
               <label class="field-label" for="startTime">開始</label>
-              <select class="select" id="startTime"></select>
+              <input class="input time-input" id="startTime" type="time" min="06:00" max="23:59" step="60">
             </div>
             <div class="time-dash">—</div>
             <div>
               <label class="field-label" for="endTime">終了</label>
-              <select class="select" id="endTime"></select>
+              <input class="input time-input" id="endTime" type="time" step="60">
             </div>
           </div>
           <div class="duration-pills" aria-label="所要時間を選択">
@@ -591,7 +595,7 @@
           <label class="field-label" for="eventMemo">メモ <span>任意</span></label>
           <textarea class="textarea" id="eventMemo" maxlength="1000" placeholder="場所、URL、持ち物など"></textarea>
         </div>
-        <div class="form-error" id="formError" role="alert"><span id="formErrorText"></span><button id="nextFreeBtn" type="button" onclick="useSuggestedTime()"></button></div>
+        <div class="form-error" id="formError" role="alert"><span id="formErrorText"></span></div>
         <div class="actions">
           <button class="save-btn" type="button" onclick="saveEvent()">この予定を保存</button>
           <button class="delete-btn" id="deleteBtn" type="button" onclick="deleteEvent()" style="display:none">予定を削除</button>
@@ -623,7 +627,7 @@
           <div class="b-list">
             <div class="b-row"><span>ファイル</span><strong id="backupFileName"></strong></div>
             <div class="b-row"><span>予定</span><strong id="backupCount"></strong></div>
-            <div class="b-row"><span>同じ開始枠</span><strong id="backupOverlap"></strong></div>
+            <div class="b-row"><span>同じ予定</span><strong id="backupOverlap"></strong></div>
             <div class="b-row"><span>出力日時</span><strong id="backupExportedAt"></strong></div>
             <div class="b-row"><span>形式</span><strong id="backupSource"></strong></div>
           </div>
@@ -642,7 +646,7 @@
   <script>
     const DAY_START = 6 * 60;
     const DAY_END = 24 * 60;
-    const SLOT_MIN = 15;
+    const SLOT_MIN = 1;
     const HOUR_HEIGHT = () => parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--hour-h')) || 72;
     const STORE = 'week_flow_v3';
     const LEGACY_STORE = 'tblocker_v2';
@@ -664,7 +668,6 @@
     let editingDate = '';
     let selectedPriority = 'normal';
     let pendingImport = null;
-    let suggestedTime = null;
     let toastTimer = null;
 
     /* Utilities */
@@ -695,6 +698,16 @@
       if (minute === 24 * 60) return '24:00';
       return `${pad(Math.floor(minute / 60))}:${pad(minute % 60)}`;
     }
+    function minToInput(minute) { return minute === DAY_END ? '00:00' : minToTime(minute); }
+    function inputToMinute(value, allowMidnight = false) {
+      const match = /^(\d{2}):(\d{2})$/.exec(String(value));
+      if (!match) return NaN;
+      const hour = Number(match[1]);
+      const minute = Number(match[2]);
+      if (hour > 23 || minute > 59) return NaN;
+      const total = hour * 60 + minute;
+      return allowMidnight && total === 0 ? DAY_END : total;
+    }
     function durationText(totalMinutes) {
       const minutes = Math.max(0, totalMinutes);
       const hours = Math.floor(minutes / 60);
@@ -703,7 +716,20 @@
       if (hours) return `${hours}h`;
       return `${rest}m`;
     }
-    function makeKey(dateIso, startMin) { return `${dateIso}|${startMin}`; }
+    function stableId(value) {
+      let hash = 2166136261;
+      for (let index = 0; index < value.length; index += 1) {
+        hash ^= value.charCodeAt(index);
+        hash = Math.imul(hash, 16777619);
+      }
+      return `m${(hash >>> 0).toString(36)}`;
+    }
+    function createId() {
+      if (globalThis.crypto && typeof globalThis.crypto.randomUUID === 'function') return globalThis.crypto.randomUUID();
+      return `e${Date.now().toString(36)}${Math.random().toString(36).slice(2, 9)}`;
+    }
+    function cleanId(value) { return /^[A-Za-z0-9_-]{1,80}$/.test(String(value || '')) ? String(value) : ''; }
+    function makeKey(dateIso, startMin, id) { return `${dateIso}|${startMin}|${cleanId(id) || createId()}`; }
     function normalizePriority(value) { return PRIORITY_ORDER.includes(value) ? value : 'normal'; }
     function showToast(message) {
       const toast = document.getElementById('toast');
@@ -715,11 +741,11 @@
 
     /* Storage and migration */
     function parseEventKey(key) {
-      const absolute = /^(\d{4}-\d{2}-\d{2})\|(\d+)$/.exec(String(key));
+      const absolute = /^(\d{4}-\d{2}-\d{2})\|(\d+)(?:\|([A-Za-z0-9_-]{1,80}))?$/.exec(String(key));
       if (absolute) {
         const startMin = Number(absolute[2]);
         if (!fromIso(absolute[1]) || !Number.isInteger(startMin) || startMin < DAY_START || startMin >= DAY_END || startMin % SLOT_MIN) return null;
-        return { date: absolute[1], startMin, legacy: false };
+        return { date: absolute[1], startMin, id: absolute[3] || '', legacy: false };
       }
       const legacy = /^(-?\d+)\|(\d)\|(\d+)$/.exec(String(key));
       if (!legacy) return null;
@@ -728,7 +754,7 @@
       let startMin = Number(legacy[3]);
       if (startMin < 60) startMin *= 60;
       if (!Number.isInteger(offset) || Math.abs(offset) > 10000 || day < 0 || day > 6 || startMin < DAY_START || startMin >= DAY_END || startMin % SLOT_MIN) return null;
-      return { date: toIso(addDays(startOfWeek(offset), day)), startMin, legacy: true };
+      return { date: toIso(addDays(startOfWeek(offset), day)), startMin, id: '', legacy: true };
     }
     function normalizeEvent(key, event) {
       const meta = parseEventKey(key);
@@ -740,10 +766,11 @@
       const startMin = clamp(snapMinute(rawStart), DAY_START, DAY_END - SLOT_MIN);
       const rawEnd = Number.isInteger(event.endMin) ? event.endMin : startMin + 60;
       const endMin = clamp(snapMinute(rawEnd), startMin + SLOT_MIN, DAY_END);
+      const id = cleanId(meta.id) || cleanId(event.id) || stableId(`${meta.date}|${startMin}|${title}`);
       return {
-        key: makeKey(meta.date, startMin),
-        value: { title: title.slice(0, 120), memo: memo.slice(0, 1000), startMin, endMin, priority: normalizePriority(event.priority) },
-        legacy: meta.legacy
+        key: makeKey(meta.date, startMin, id),
+        value: { id, title: title.slice(0, 120), memo: memo.slice(0, 1000), startMin, endMin, priority: normalizePriority(event.priority) },
+        legacy: meta.legacy || !meta.id || event.id !== id
       };
     }
     function normalizeEvents(raw) {
@@ -782,12 +809,6 @@
     function scrollPageToTop() { requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'smooth' })); }
 
     /* Event editor */
-    function buildTimeOptions() {
-      const start = document.getElementById('startTime');
-      const end = document.getElementById('endTime');
-      for (let minute = DAY_START; minute < DAY_END; minute += SLOT_MIN) start.add(new Option(minToTime(minute), minute));
-      for (let minute = DAY_START + SLOT_MIN; minute <= DAY_END; minute += SLOT_MIN) end.add(new Option(minToTime(minute), minute));
-    }
     function renderPriorities() {
       const row = document.getElementById('priorityRow');
       row.innerHTML = '';
@@ -812,8 +833,8 @@
       document.getElementById('sheetTitle').textContent = `${date.getMonth() + 1}月${date.getDate()}日 ${DAY_NAMES[(date.getDay() + 6) % 7]}`;
       document.getElementById('eventTitle').value = event ? event.title : '';
       document.getElementById('eventMemo').value = event ? event.memo : '';
-      document.getElementById('startTime').value = String(start);
-      document.getElementById('endTime').value = String(end);
+      document.getElementById('startTime').value = minToInput(start);
+      document.getElementById('endTime').value = minToInput(end);
       document.getElementById('deleteBtn').style.display = event ? '' : 'none';
       renderPriorities();
       ensureValidEnd();
@@ -826,7 +847,6 @@
       document.body.style.overflow = '';
       document.activeElement && document.activeElement.blur();
       editingKey = null;
-      suggestedTime = null;
       clearFormError();
     }
     function openQuickAdd() {
@@ -836,24 +856,23 @@
         const now = new Date();
         start = clamp(Math.ceil((now.getHours() * 60 + now.getMinutes()) / SLOT_MIN) * SLOT_MIN, DAY_START, DAY_END - 60);
       }
-      const free = findNextFreeSlot(toIso(date), start, 60, null);
-      openEventSheet(null, toIso(date), free ? free.startMin : start);
+      openEventSheet(null, toIso(date), start);
     }
     function ensureValidEnd() {
-      const startSelect = document.getElementById('startTime');
-      const endSelect = document.getElementById('endTime');
-      const start = Number(startSelect.value);
-      let end = Number(endSelect.value);
-      Array.from(endSelect.options).forEach(option => { option.disabled = Number(option.value) <= start; });
+      const startInput = document.getElementById('startTime');
+      const endInput = document.getElementById('endTime');
+      const start = inputToMinute(startInput.value);
+      let end = inputToMinute(endInput.value, true);
       if (!Number.isInteger(end) || end <= start) {
         end = Math.min(start + 60, DAY_END);
-        endSelect.value = String(end);
+        endInput.value = minToInput(end);
       }
       clearFormError();
     }
     function setDuration(minutes) {
-      const start = Number(document.getElementById('startTime').value);
-      document.getElementById('endTime').value = String(Math.min(start + minutes, DAY_END));
+      const start = inputToMinute(document.getElementById('startTime').value);
+      if (!Number.isInteger(start)) return;
+      document.getElementById('endTime').value = minToInput(Math.min(start + minutes, DAY_END));
       ensureValidEnd();
     }
     function dayEvents(dateIso, source = events) {
@@ -862,37 +881,12 @@
         .filter(item => item.meta && item.meta.date === dateIso)
         .sort((a, b) => a.event.startMin - b.event.startMin || a.event.endMin - b.event.endMin || a.event.title.localeCompare(b.event.title, 'ja'));
     }
-    function findConflict(dateIso, startMin, endMin, excludeKey = null, source = events) {
-      return dayEvents(dateIso, source).find(item => item.key !== excludeKey && startMin < item.event.endMin && endMin > item.event.startMin) || null;
-    }
-    function findNextFreeSlot(dateIso, fromMinute, duration, excludeKey, source = events) {
-      const safeDuration = Math.max(SLOT_MIN, Math.min(duration, DAY_END - DAY_START));
-      for (let start = clamp(snapMinute(fromMinute), DAY_START, DAY_END - safeDuration); start + safeDuration <= DAY_END; start += SLOT_MIN) {
-        if (!findConflict(dateIso, start, start + safeDuration, excludeKey, source)) return { startMin: start, endMin: start + safeDuration };
-      }
-      for (let start = DAY_START; start < Math.min(fromMinute, DAY_END - safeDuration); start += SLOT_MIN) {
-        if (!findConflict(dateIso, start, start + safeDuration, excludeKey, source)) return { startMin: start, endMin: start + safeDuration };
-      }
-      return null;
-    }
-    function showFormError(message, suggestion = null) {
-      suggestedTime = suggestion;
+    function showFormError(message) {
       document.getElementById('formErrorText').textContent = message;
-      const button = document.getElementById('nextFreeBtn');
-      button.classList.toggle('on', !!suggestion);
-      button.textContent = suggestion ? `${minToTime(suggestion.startMin)}〜${minToTime(suggestion.endMin)} に移動` : '';
       document.getElementById('formError').classList.add('on');
     }
     function clearFormError() {
-      suggestedTime = null;
       document.getElementById('formError').classList.remove('on');
-      document.getElementById('nextFreeBtn').classList.remove('on');
-    }
-    function useSuggestedTime() {
-      if (!suggestedTime) return;
-      document.getElementById('startTime').value = String(suggestedTime.startMin);
-      document.getElementById('endTime').value = String(suggestedTime.endMin);
-      ensureValidEnd();
     }
     function saveEvent() {
       const titleInput = document.getElementById('eventTitle');
@@ -902,23 +896,19 @@
         titleInput.focus();
         return;
       }
-      const startMin = Number(document.getElementById('startTime').value);
-      const endMin = Number(document.getElementById('endTime').value);
-      if (!Number.isInteger(startMin) || !Number.isInteger(endMin) || endMin <= startMin) {
+      const startMin = inputToMinute(document.getElementById('startTime').value);
+      const endMin = inputToMinute(document.getElementById('endTime').value, true);
+      if (!Number.isInteger(startMin) || startMin < DAY_START || startMin >= DAY_END || !Number.isInteger(endMin) || endMin <= startMin || endMin > DAY_END) {
         showFormError('終了時刻は開始時刻より後にしてください。');
         return;
       }
-      const conflict = findConflict(editingDate, startMin, endMin, editingKey);
-      if (conflict) {
-        const duration = endMin - startMin;
-        const suggestion = findNextFreeSlot(editingDate, conflict.event.endMin, duration, editingKey);
-        showFormError(`「${conflict.event.title}」（${minToTime(conflict.event.startMin)}〜${minToTime(conflict.event.endMin)}）と重なっています。`, suggestion);
-        return;
-      }
       const wasEditing = !!editingKey;
-      const newKey = makeKey(editingDate, startMin);
+      const existing = editingKey ? events[editingKey] : null;
+      const id = cleanId(existing && existing.id) || cleanId(parseEventKey(editingKey || '')?.id) || createId();
+      const newKey = makeKey(editingDate, startMin, id);
       if (editingKey && editingKey !== newKey) delete events[editingKey];
       events[newKey] = {
+        id,
         title,
         memo: document.getElementById('eventMemo').value.trim(),
         startMin,
@@ -1162,52 +1152,33 @@
       return !date || Number.isNaN(date.getTime()) ? '' : date.toLocaleString('ja-JP');
     }
     function showImportReview(name, data) {
-      const sameStarts = Object.keys(data.events).filter(key => events[key]).length;
+      const sameEvents = Object.keys(data.events).filter(key => events[key]).length;
       document.getElementById('backupFileName').textContent = name;
       document.getElementById('backupCount').textContent = `${data.count}件`;
-      document.getElementById('backupOverlap').textContent = sameStarts ? `${sameStarts}件` : 'なし';
+      document.getElementById('backupOverlap').textContent = sameEvents ? `${sameEvents}件` : 'なし';
       document.getElementById('backupExportedAt').textContent = data.exportedAt;
       document.getElementById('backupSource').textContent = data.skipped ? `${data.source} / ${data.skipped}件除外` : data.source;
       document.getElementById('backupReview').classList.add('on');
       setBackupStatus('内容を確認して取り込み方法を選んでください。', 'warn');
     }
-    function mergeWithoutOverlaps(base, incoming, replaceMode) {
-      const output = replaceMode ? {} : cloneEvents(base);
-      let skipped = 0;
-      const sorted = Object.entries(incoming).sort((a, b) => {
-        const metaA = parseEventKey(a[0]);
-        const metaB = parseEventKey(b[0]);
-        return metaA.date.localeCompare(metaB.date) || a[1].startMin - b[1].startMin || a[1].endMin - b[1].endMin;
-      });
-      sorted.forEach(([key, event]) => {
-        const meta = parseEventKey(key);
-        const previous = output[key];
-        if (previous) delete output[key];
-        if (findConflict(meta.date, event.startMin, event.endMin, null, output)) {
-          if (previous) output[key] = previous;
-          skipped += 1;
-          return;
-        }
-        output[key] = event;
-      });
-      return { events: output, skipped };
+    function mergeEvents(base, incoming, replaceMode) {
+      return replaceMode ? cloneEvents(incoming) : Object.assign({}, cloneEvents(base), cloneEvents(incoming));
     }
     function applyPendingImport(mode) {
       if (!pendingImport) { setBackupStatus('先にバックアップファイルを選んでください。', 'err'); return; }
       const replacing = mode === 'replace';
       const message = replacing
         ? '現在の予定をすべて置き換えます。安全用バックアップを書き出してから続けますか？'
-        : '現在の予定に追加します。同じ開始枠は読み込み側の予定で更新します。続けますか？';
+        : '現在の予定に追加します。時間が重なる予定もそのまま保持します。続けますか？';
       if (!confirm(message)) return;
       const importedCount = pendingImport.count;
       exportBackup('pre-import');
-      const merged = mergeWithoutOverlaps(events, pendingImport.events, replacing);
-      events = merged.events;
+      events = mergeEvents(events, pendingImport.events, replacing);
       persistEvents();
       render();
       document.getElementById('backupSummary').textContent = `現在の予定: ${countEvents()}件`;
       resetPendingImport(true);
-      setBackupStatus(`${importedCount}件を読み込みました。${merged.skipped ? `重複する${merged.skipped}件は除外しました。` : ''}`, merged.skipped ? 'warn' : 'ok');
+      setBackupStatus(`${importedCount}件を読み込みました。`, 'ok');
     }
 
     document.getElementById('startTime').addEventListener('change', ensureValidEnd);
@@ -1224,7 +1195,6 @@
       else if (document.getElementById('backupOverlay').classList.contains('on')) closeBackupSheet();
     });
 
-    buildTimeOptions();
     loadEvents();
     render();
     setTimeout(scrollToRelevantTime, 180);
